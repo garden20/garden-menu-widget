@@ -1,4 +1,13 @@
-;(function(){
+(function (root, factory) {
+    if (typeof exports === 'object') {
+        module.exports = factory();
+    } else if (typeof define === 'function' && define.amd) {
+        define([],factory);
+    } else {
+        root.jscss = factory();
+    }
+}(this, function (url, GardenMenu, jscss, css, topbar_t) {
+
   var
     id = 0
   , indent = function(level){
@@ -60,11 +69,7 @@
       }
     }
   ;
-  if (typeof define !== "undefined") {
-    define('jscss', function(){ return jscss; });
-  }else if (typeof module !== "undefined" && module.exports){
-    module.exports = jscss;
-  }else{
-    window.jscss = jscss;
-  }
-})();
+
+  return jscss;
+
+}));

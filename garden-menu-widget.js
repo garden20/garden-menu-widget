@@ -2,11 +2,12 @@
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['url', 'garden-menu'],factory);
+        define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js'],factory);
     } else {
-        root.garden_menu_widget = factory(root.url, root.garden_menu, root.JST["templates/topbar.underscore"]);
+        root.garden_menu_widget = factory(
+            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.JST["templates/topbar.underscore"]);
     }
-}(this, function (url, GardenMenu, topbar_t) {
+}(this, function (url, GardenMenu, jscss, css, topbar_t) {
 
 
 var app = function(dashboard_db_url) {
@@ -19,6 +20,7 @@ var app = function(dashboard_db_url) {
 
 app.prototype.init = function(callback) {
     var widget = this;
+
     widget.menu_core.init(function(err, settings){
         widget.menu_core.getAppLinks(function(err, links){
             if (err) return callback(err);
@@ -34,7 +36,9 @@ app.prototype.loadTopbar = function(data, callback) {
         $topbar = $('<div id="dashboard-topbar"></div>');
         $('body').prepend($topbar);
     }
-    console.log(data);
+    // check for other styles
+    jscss.embed(jscss.compile(css));
+
     $topbar.html(topbar_t(data));
     var path = window.location.pathname;
 

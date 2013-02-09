@@ -12,9 +12,10 @@ var srcFiles = [
   "jam/garden-default-settings/garden-default-settings.js",
   "jam/garden-menu/garden-menu.js",
 
-  "jam/jscss/lib/index/js",
+  "jam/jscss/lib/index.js",
   "jam/jquery/jquery-1.9.1.min.js",
   "dist/templates.js",
+  "garden-menu-widget.css.js",
   "garden-menu-widget.js",
   "topbar.js"
 ];
@@ -28,8 +29,8 @@ module.exports = function(grunt) {
     meta: {
       banner:"/*Garden Topbar*/",
       inline:{
-        top : "(function() { ",
-        bottom : " })();"
+        top : "(function(window) { ",
+        bottom : " })(window);"
       }
     },
     lint: {

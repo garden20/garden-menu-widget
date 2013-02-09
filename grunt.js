@@ -6,12 +6,15 @@ var srcFiles = [
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
   "lib/pouchdb-nightly.js",
+
   "jam/garden-views/garden-views.js",
   "jam/garden-dashboard-core/garden-dashboard-core.js",
   "jam/garden-default-settings/garden-default-settings.js",
   "jam/garden-menu/garden-menu.js",
 
   "jam/jscss/lib/index/js",
+  "jam/jquery/jquery-1.9.1.min.js",
+  "dist/templates.js",
   "garden-menu-widget.js",
   "topbar.js"
 ];
@@ -32,6 +35,14 @@ module.exports = function(grunt) {
     lint: {
       all: ['garden-menu-widget.js']
     },
+    jst: {
+      compile: {
+        files: {
+          "dist/templates.js": "templates/topbar.underscore"
+        }
+      }
+    },
+
     concat: {
       all: {
         src: grunt.utils._.flatten([
@@ -47,7 +58,9 @@ module.exports = function(grunt) {
       }
     }
   });
+
+  grunt.loadNpmTasks('grunt-contrib-jst');
   // Default task.
-  grunt.registerTask('default', 'lint concat min');
+  grunt.registerTask('default', 'lint jst concat min');
 
 };

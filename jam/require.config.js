@@ -26,6 +26,11 @@ var jam = {
             "main": "garden-views.js"
         },
         {
+            "name": "jquery",
+            "location": "jam/jquery",
+            "main": "jquery-1.9.1.min.js"
+        },
+        {
             "name": "jscss",
             "location": "jam/jscss",
             "main": "lib/index.js"
@@ -59,10 +64,19 @@ var jam = {
             "name": "url",
             "location": "jam/url",
             "main": "url.js"
+        },
+        {
+            "name": "zepto",
+            "location": "jam/zepto",
+            "main": "zepto.js"
         }
     ],
     "version": "0.2.11",
-    "shim": {}
+    "shim": {
+        "zepto": {
+            "exports": "Zepto"
+        }
+    }
 };
 
 if (typeof require !== "undefined" && require.config) {

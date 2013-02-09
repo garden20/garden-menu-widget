@@ -1,0 +1,6 @@
+<% _.each(grouped_apps.apps, function(app) { %>
+
+<a href="<%= app.link %>">
+<%= app.title %>
+</a>
+<% }) %>

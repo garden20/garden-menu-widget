@@ -1,0 +1,10 @@
+CACHE MANIFEST
+
+#version 16
+
+CACHE:
+
+dist/topbar.min.js
+
+NETWORK:
+*

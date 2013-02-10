@@ -13,7 +13,8 @@
   "dependencies": {
     "pouchdb": "0.0.4",
     "async": "0.1.23",
-    "garden-views" : "0.0.1"
+    "garden-views" : "0.0.1",
+    "stately": "1.0.0"
   },
   "devDependencies": {
     "grunt-mocha-test": "0.0.1",

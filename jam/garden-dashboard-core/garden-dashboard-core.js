@@ -10,15 +10,16 @@
 
 var app = {};
 app = function(dashboard_db_url, options) {
-    var thus = this;
-    thus.dashboard_db_url = dashboard_db_url;
-    thus.pouchName = app.getPouchName(dashboard_db_url);
+    var core = this;
+    core.dashboard_db_url = dashboard_db_url;
+    core.pouchName = app.getPouchName(dashboard_db_url);
 };
 
 
 app.prototype.init = function(callback) {
-    var core = this;
-
+	var core = this;
+	core.initState();
+	core.states.determine_state();
 };
 
 
@@ -39,15 +40,27 @@ app.prototype.settings = function(callback) {
 };
 
 app.prototype.topbar = function(callback) {
+
+};
+
+app.prototype.topbar_local = function(callback) {
+	var core = this;
+  core.local_db.query(garden_views.dashboard_assets, {reduce: false, include_docs: true}, core.topbar_process);
+};
+
+app.prototype.topbar_remote = function(callback) {
+	var core = this;
+  core.remote_db.query('dashboard_assets', {reduce: false, include_docs: true}, core.topbar_process);
+};
+
+app.prototype.topbar_process = function(resp, callback) {
   var results = {
     settingsDoc : {},
     selectedThemeDoc : null,
     apps: [],
     scripts: []
   };
-
-  this.local_db.query(garden_views.dashboard_assets, {reduce: false, include_docs: true}, function(err, resp){
-    async.forEach(resp.rows, function(row, cb){
+  async.forEach(resp.rows, function(row, cb){
         if (row.key[0] === 0) results.settingsDoc = row.value;
         if (row.key[0] === 1) {
             if (row.key[3] == 'install') {
@@ -69,34 +82,13 @@ app.prototype.topbar = function(callback) {
         if (row.key[0] === 2) results.selectedThemeDoc = row.doc;
         if (row.key[0] === 3) results.scripts.push(row.doc.src);
         cb();
-    }, function(err){
-      callback(err, results);
-    });
+  }, function(err){
+    callback(err, results);
   });
 };
 
 
-
-app.getPouchName = function(dashboard_db_url) {
-
-  var parsed = url.parse(dashboard_db_url),
-      namespace = parsed.hostname + parsed.port;
-
-  if (parsed.pathname) {
-     var clean = parsed.pathname.replace(/\//g, '_');
-     namespace += clean;
-  }
-
-
-  return namespace;
-};
-
-
-
-
-
-
-app.prototype.setupState = function() {
+app.prototype.initState = function() {
     var core = this;
     core.states = Stately({
         "OYHI": {
@@ -122,45 +114,43 @@ app.prototype.setupState = function() {
         },
 
         "OFFLINE_WITH_USER" : {
-            poll_connectivity : t_poll_connectivity,
-            logout: t_logout
+            poll_connectivity : core.t_poll_connectivity,
+            logout: core.t_logout
         },
         "OFFLINE_WITHOUT_USER" : {
-           poll_connectivity : t_poll_connectivity,
-           login: t_login
+           poll_connectivity : core.t_poll_connectivity,
+           login: core.t_login
         },
         "ONLINE_WITH_USER" : {
-           poll_connectivity : t_poll_connectivity,
-           logout: t_logout
+           poll_connectivity : core.t_poll_connectivity,
+           logout: core.t_logout
         },
         "ONLINE_WITHOUT_USER": {
-           poll_connectivity : t_poll_connectivity,
-           login: t_login
+           poll_connectivity : core.t_poll_connectivity,
+           login: core.t_login
         }
     });
-    return states;
 };
 
 app.prototype.t_determine_state = function() {
     var core = this;
     async({
-        is_couch_available : core.is_couch_available,
+        remote_dashboard : core.remote_dashboard,
         pouched_dashboard : core.pouched_dashboard
     }, function(err, info){
         if (err) {
             return core.states.setMachineState(core.states.READY_LOCAL_DB_UNSUPPORTED);
         }
-
-        if (info.is_couch_available && !info.pouched_dashboard.synced) {
+        if (info.remote_dashboard.available && !info.pouched_dashboard.synced) {
             return core.states.setMachineState(core.states.FIRST_VISIT);
         }
-        if (info.is_couch_available && info.pouched_dashboard.synced) {
+        if (info.remote_dashboard.available && info.pouched_dashboard.synced) {
             return core.states.setMachineState(core.states.READY_HAVE_LOCAL_DB_ONLINE);
         }
-        if (!info.is_couch_available && info.pouched_dashboard.synced) {
+        if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
             return core.states.setMachineState(core.states.READY_HAVE_LOCAL_DB_OFFLINE);
         }
-        if (!info.is_couch_available && !info.pouched_dashboard.synced) {
+        if (!info.remote_dashboard.available && !info.pouched_dashboard.synced) {
             return core.states.setMachineState(core.states.OFFLINE_NO_HOPE);
         }
     });
@@ -194,6 +184,7 @@ app.prototype.remote_dashboard = function(callback) {
 };
 
 app.prototype.pouched_dashboard = function(callback) {
+		var core = this;
     // return pouch, and if it has been synced with a dashbaord
     Pouch(this.pouchName, function(err, db){
         if (err) return callback(err);
@@ -209,8 +200,16 @@ app.prototype.pouched_dashboard = function(callback) {
         });
     });
 };
-app.prototype.poll_connectivity = function(callback) {
-    // che
+
+app.prototype.t_poll_connectivity = function(callback) {
+	var core = this;
+	core.get_remote_session(function(err, session){
+		// swallow errors
+		// need to get logged in or not
+		// if (err) return core.states.setMachineState(core.states.
+				
+		
+	});
 };
 
 
@@ -222,9 +221,24 @@ app.prototype.t_first_sync = function() {
     });
 };
 
-app.prototype.method_name = function(first_argument) {
+app.prototype.t_login = function(user, password) {
     // body...
 };
+
+
+
+app.getPouchName = function(dashboard_db_url) {
+
+  var parsed = url.parse(dashboard_db_url),
+      namespace = parsed.hostname + parsed.port;
+
+  if (parsed.pathname) {
+     var clean = parsed.pathname.replace(/\//g, '_');
+     namespace += clean;
+  }
+  return namespace;
+};
+
 
 
 

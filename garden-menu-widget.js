@@ -12,7 +12,7 @@
 
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
-    this.menu_core = new GardenMenu(dashboard_db_url);
+    this.garden_menu = new GardenMenu(dashboard_db_url);
 };
 
 
@@ -21,8 +21,8 @@ var app = function(dashboard_db_url) {
 app.prototype.init = function(callback) {
     var widget = this;
 
-    widget.menu_core.init(function(err, settings){
-        widget.menu_core.getAppLinks(function(err, links){
+    widget.garden_menu.init(function(err, results){
+        widget.garden_menu.getAppLinks(function(err, links){
             if (err) return callback(err);
             widget.loadTopbar(links, callback);
         });

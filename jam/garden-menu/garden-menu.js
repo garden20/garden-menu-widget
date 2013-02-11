@@ -11,30 +11,37 @@
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
     this.dashboard_core = new DashboardCore(dashboard_db_url);
+
 };
 
 app.prototype.init = function(callback) {
-    var thus = this;
-    thus.dashboard_core.init(function(err){
-        if (err) return callback(err);
-            thus.dashboard_core.sync(function(err){
-            if (err) {
-                // prob offline?
+    var menu = this;
 
-            }
-            thus.dashboard_core.settings(function(err2, settingsDoc) {
-                if (err2) return callback(err2);
-                thus.settings = _.defaults(settingsDoc, default_settings);
-                callback(null, thus.settings);
-            });
+    // some inital values
+    var results = {
+        core : menu.dashboard_core,
+        state: 'OFFLINE_NO_HOPE',
+        settings: null
+    };
+
+    menu.dashboard_core.start(function(err, state) {
+
+        if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
+        results.state = state;
+
+        menu.dashboard_core.settings(function(err2, settingsDoc) {
+            if (err2) return callback(err2, results);
+            menu.settings = _.defaults(settingsDoc, default_settings);
+            results.settings = menu.settings;
+            callback(null, results);
         });
     });
 };
 
 app.prototype.getAppLinks = function(options, callback) {
-    var thus = this,
-        settings = thus.settings,
-        dashboard_url = thus.dashboard_ui_url(),
+    var menu = this,
+        settings = menu.settings,
+        dashboard_url = menu.dashboard_ui_url(),
         home_url = dashboard_url,
         settings_url  = dashboard_url + "settings";
 
@@ -46,10 +53,10 @@ app.prototype.getAppLinks = function(options, callback) {
         options = {};
     }
 
-    thus.dashboard_core.topbar(function(err, results) {
+    menu.dashboard_core.topbar(function(err, results) {
         results.apps = _.map(results.apps, function(app) {
             if (app.db) {
-                app.link = thus.app_url_ui(app.doc);
+                app.link = menu.app_url_ui(app.doc);
             }
             if (app.doc.remote_user && options.username && app.doc.remote_user !== username) {
                 app.remote_user_warning = true;

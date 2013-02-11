@@ -56,6 +56,11 @@ var jam = {
             "main": "uuid.js"
         },
         {
+            "name": "stately",
+            "location": "jam/stately",
+            "main": "Stately.js"
+        },
+        {
             "name": "underscore",
             "location": "jam/underscore",
             "main": "underscore.js"
@@ -64,19 +69,10 @@ var jam = {
             "name": "url",
             "location": "jam/url",
             "main": "url.js"
-        },
-        {
-            "name": "zepto",
-            "location": "jam/zepto",
-            "main": "zepto.js"
         }
     ],
     "version": "0.2.11",
-    "shim": {
-        "zepto": {
-            "exports": "Zepto"
-        }
-    }
+    "shim": {}
 };
 
 if (typeof require !== "undefined" && require.config) {

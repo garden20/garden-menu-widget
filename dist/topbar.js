@@ -2433,6 +2433,301 @@ function parseHost(host) {
 
 }).call(this);
 
+/*
+ * Stately.js: A JavaScript based finite-state machine (FSM) engine.
+ *
+ * Copyright (c) 2012 Florian Schäfer (florian.schaefer@gmail.com)
+ * Released under MIT license.
+ *
+ * Version: 1.0.0
+ *
+ */
+(function (root, factory) {
+    if (typeof exports === 'object') {
+        module.exports = factory();
+    } else if (typeof define === 'function' && define.amd) {
+        define(factory);
+    } else {
+        root.Stately = factory();
+    }
+})(this, function () {
+
+    var
+        toString = Object.prototype.toString,
+
+        InvalidStateError = (function () {
+
+            function InvalidStateError(message) {
+
+                this.name = 'InvalidStateError';
+
+                this.message = message;
+            }
+
+            InvalidStateError.prototype = new Error();
+
+            InvalidStateError.prototype.constructor = InvalidStateError;
+
+            return InvalidStateError;
+        })();
+
+    function Stately(statesObject) {
+
+        if (typeof statesObject === 'function') {
+
+            statesObject = statesObject();
+        }
+
+        if (toString.call(statesObject) !== '[object Object]') {
+
+            throw new InvalidStateError('Stately.js: Invalid states object: `' + statesObject + '`.');
+        }
+
+        var
+            currentState,
+
+            notificationStore = [],
+
+            notify = function () {
+
+                var notifications = notificationStore.slice();
+
+                for (var i = 0, l = notifications.length; i < l; i++) {
+
+                    notifications[i].apply(this, arguments);
+                }
+            },
+
+            stateStore = {
+
+                getMachineState: function getMachineState() {
+
+                    return currentState.name;
+                },
+
+                setMachineState: function setMachineState(nextState /*, eventName */) {
+
+                    var
+                        eventName = arguments[1],
+
+                        onBeforeState,
+
+                        onEnterState,
+
+                        onLeaveState,
+
+                        lastState = currentState;
+
+                    if (!nextState || !nextState.name || !stateStore[nextState.name]) {
+
+                        throw new InvalidStateError('Stately.js: Transitioned into invalid state: `' + setMachineState.caller + '`.');
+                    }
+
+                    currentState = nextState;
+
+                    onBeforeState = stateMachine['onbefore' + currentState.name];
+
+                    if (onBeforeState && typeof onBeforeState === 'function') {
+
+                        onBeforeState.call(stateStore, eventName, lastState.name, nextState.name);
+                    }
+
+                    onEnterState = stateMachine['onenter' + currentState.name] || stateMachine['on' + currentState.name];
+
+                    if (onEnterState && typeof onEnterState === 'function') {
+
+                        onEnterState.call(stateStore, eventName, lastState.name, nextState.name);
+                    }
+
+                    onLeaveState = stateMachine['onleave' + lastState.name];
+
+                    if (onLeaveState && typeof onLeaveState === 'function') {
+
+                        onLeaveState.call(stateStore, eventName, lastState.name, nextState.name);
+                    }
+
+                    notify.call(stateStore, eventName, lastState.name, nextState.name);
+
+                    return this;
+                },
+
+                getMachineEvents: function getMachineEvents() {
+
+                    var events = [];
+
+                    for (var property in currentState) {
+
+                        if (currentState.hasOwnProperty(property)) {
+
+                            if (typeof currentState[property] === 'function') {
+
+                                events.push(property);
+                            }
+                        }
+                    }
+
+                    return events;
+                }
+
+            },
+
+            stateMachine = {
+
+                getMachineState: stateStore.getMachineState,
+
+                getMachineEvents: stateStore.getMachineEvents,
+
+                bind: function bind(callback) {
+
+                    if (callback) {
+
+                        notificationStore.push(callback);
+                    }
+
+                    return this;
+                },
+
+                unbind: function unbind(callback) {
+
+                    if (!callback) {
+
+                        notificationStore = [];
+
+                    } else {
+
+                        for (var i = 0, l = notificationStore.length; i < l; i++) {
+
+                            if (notificationStore[i] === callback) {
+
+                                notificationStore.splice(i, 1);
+                            }
+                        }
+                    }
+
+                    return this;
+                }
+            },
+
+            transition = function transition(stateName, eventName, nextEvent) {
+
+                return function event() {
+
+                    var
+                        onBeforeEvent,
+
+                        onAfterEvent,
+
+                        nextState,
+
+                        eventValue = stateMachine;
+
+                    if (stateStore[stateName] !== currentState) {
+
+                        if (nextEvent) {
+
+                            eventValue = nextEvent.apply(stateStore, arguments);
+                        }
+
+                        return eventValue;
+                    }
+
+                    onBeforeEvent = stateMachine['onbefore' + eventName];
+
+                    if (onBeforeEvent && typeof onBeforeEvent === 'function') {
+
+                        onBeforeEvent.call(stateStore, eventName, currentState.name, currentState.name);
+                    }
+
+                    eventValue = stateStore[stateName][eventName].apply(stateStore, arguments);
+
+                    if (typeof eventValue === 'undefined') {
+
+                        nextState = currentState;
+
+                        eventValue = stateMachine;
+
+                    } else if (toString.call(eventValue) === '[object Object]') {
+
+                        nextState = (eventValue === stateStore ? currentState : eventValue);
+
+                        eventValue = stateMachine;
+
+                    } else if (toString.call(eventValue) === '[object Array]' && eventValue.length >= 1) {
+
+                        nextState = eventValue[0];
+
+                        eventValue = eventValue[1];
+                    }
+
+                    onAfterEvent = stateMachine['onafter' + eventName] || stateMachine['on' + eventName];
+
+                    if (onAfterEvent && typeof onAfterEvent === 'function') {
+
+                        onAfterEvent.call(stateStore, eventName, currentState.name, nextState.name);
+                    }
+
+                    stateStore.setMachineState(nextState, eventName);
+
+                    return eventValue;
+                };
+            };
+
+        for (var stateName in statesObject) {
+
+            if (statesObject.hasOwnProperty(stateName)) {
+
+                stateStore[stateName] = statesObject[stateName];
+
+                for (var eventName in stateStore[stateName]) {
+
+                    if (stateStore[stateName].hasOwnProperty(eventName)) {
+
+                        if (typeof stateStore[stateName][eventName] === 'string') {
+
+                            stateStore[stateName][eventName] = (function (stateName) {
+
+                                return function event() {
+
+                                    return this[stateName];
+                                };
+
+                            })(stateStore[stateName][eventName]);
+                        }
+
+                        if (typeof stateStore[stateName][eventName] === 'function') {
+
+                            stateMachine[eventName] = transition(stateName, eventName, stateMachine[eventName]);
+                        }
+                    }
+                }
+
+                stateStore[stateName].name = stateName;
+
+                if (!currentState) {
+
+                    currentState = stateStore[stateName];
+                }
+            }
+        }
+
+        if (!currentState) {
+
+            throw new InvalidStateError('Stately.js: Invalid initial state.');
+        }
+
+        return stateMachine;
+    }
+
+    Stately.machine = function machine(statesObject) {
+        return new Stately(statesObject);
+    };
+
+    Stately.InvalidStateError = InvalidStateError;
+
+    return Stately;
+
+});
+
 /*PouchDB*/
 
 
@@ -6963,93 +7258,382 @@ return views;
 }));
 (function (root, factory) {
     if (typeof exports === 'object') {
-        module.exports = factory( require('async'), require('pouchdb'), require('garden-views'), require('url'));
+        module.exports = factory( require('async'), require('pouchdb'), require('garden-views'), require('url'), require('stately.js'));
     } else if (typeof define === 'function' && define.amd) {
         define(['async','pouchdb', 'garden-views', 'url'],factory);
     } else {
-        root.garden_dashboard_core = factory(root.async, root.Pouch, root.garden_views, root.url);
+        root.garden_dashboard_core = factory(root.async, root.Pouch, root.garden_views, root.url, root.Stately);
     }
-}(this, function (async, pouch, garden_views, url) {
+}(this, function (async, Pouch, garden_views, url, Stately) {
 
 var app = {};
-app.dashboard = function(dashboard_db_url, options) {
-    var thus = this;
-    thus.dashboard_db_url = dashboard_db_url;
-    thus.pouchName = app.getPouchName(dashboard_db_url);
-};
+app = function(dashboard_db_url, options) {
+    var core = this;
+    core.dashboard_db_url = dashboard_db_url;
+    core.pouchName = app.getPouchName(dashboard_db_url);
+
+    /*------   Private Methods ------------------*/
+    // any methods that start with t_ transition the state machine
 
 
-app.dashboard.prototype.init = function(callback) {
-    var thus = this;
-    async.parallel({
-        local : function(cb) {
-            pouch(thus.pouchName, cb);
-        },
-        remote: function(cb) {
-            pouch(thus.dashboard_db_url, cb);
-        }
-    }, function(err, data){
-        if (err) return callback(err);
-        thus.local_db = data.local;
-        thus.remote_db =  data.remote;
-        callback();
-    });
-};
+    var initState = function() {
+        core.states = Stately({
+            "INIT": {
+                start : t_determine_state
+            },
+            "FIRST_VISIT" : {
+                // couch available, pouch supported, never synced
+                sync: t_first_sync,
+                topbar: topbar_remote,
+                allAssets: allAssets_remote,
+                settings: settings_remote
+            },
+            "OFFLINE_NO_HOPE" : {
+                // no couch available, pouch supported, never synced
+            },
+            "READY_LOCAL_DB_UNSUPPORTED": {
+                // couch available, pouch not supported
+                topbar: topbar_remote,
+                allAssets: allAssets_remote,
+                settings: settings_remote
+            },
+            "OFFLINE_WITH_USER" : {
+                poll : t_poll_connectivity,
+                login: t_login,
+                logout: t_logout,
+                online: t_online,
 
-
-app.dashboard.prototype.sync = function(callback) {
-    pouch.replicate(this.remote_db, this.local_db, {}, callback);
-};
-
-
-app.dashboard.prototype.allAssets = function(callback) {
-    this.local_db.allDocs(callback);
-};
-
-app.dashboard.prototype.settings = function(callback) {
-  this.local_db.get('settings', function(err, data){
-    if (err && err.status === 404) return callback(null, {});
-    callback(err, data);
-  });
-};
-
-app.dashboard.prototype.topbar = function(callback) {
-  var results = {
-    settingsDoc : {},
-    selectedThemeDoc : null,
-    apps: [],
-    scripts: []
-  };
-
-  this.local_db.query(garden_views.dashboard_assets, {reduce: false, include_docs: true}, function(err, resp){
-    async.forEach(resp.rows, function(row, cb){
-        if (row.key[0] === 0) results.settingsDoc = row.value;
-        if (row.key[0] === 1) {
-            if (row.key[3] == 'install') {
-                results.apps.push({
-                    title : row.key[2],
-                    db :row.value.db,
-                    doc : row.doc
-                });
+                topbar: topbar_local,
+                allAssets: allAssets_local,
+                settings: settings_local
+            },
+            "OFFLINE_WITHOUT_USER" : {
+                poll : t_poll_connectivity,
+                login: t_login,
+                logout: t_logout,
+                online: t_online,
+                topbar: topbar_local,
+                allAssets: allAssets_local,
+                settings: settings_local
+            },
+            "ONLINE_WITH_USER" : {
+                poll : t_poll_connectivity,
+                login: t_login,
+                logout: t_logout,
+                offline: t_offline,
+                topbar: topbar_local,
+                allAssets: allAssets_local,
+                settings: settings_local
+            },
+            "ONLINE_WITHOUT_USER": {
+                poll : t_poll_connectivity,
+                login: t_login,
+                logout: t_logout,
+                offline: t_offline,
+                topbar: topbar_local,
+                allAssets: allAssets_local,
+                settings: settings_local
             }
-            if (row.key[3] == 'link') {
-                results.apps.push({
-                    title : row.key[2],
-                    link :row.value.url,
-                    doc  : row.doc,
-                    external : true
-                });
+        });
+    };
+
+    var t_determine_state = function() {
+        var self = this;
+
+        async.parallel({
+            remote_dashboard : remote_dashboard,
+            pouched_dashboard : pouched_dashboard,
+            pouched_extra : pouched_extra
+        }, function(err, info){
+            if (err) {
+                return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
             }
-        }
-        if (row.key[0] === 2) results.selectedThemeDoc = row.doc;
-        if (row.key[0] === 3) results.scripts.push(row.doc.src);
-        cb();
-    }, function(err){
-      callback(err, results);
-    });
-  });
+            if (info.remote_dashboard.available) {
+
+                store_session(info.remote_dashboard.session, function(err, rest){
+                    if (!info.pouched_dashboard.synced) {
+                        return self.setMachineState(self.FIRST_VISIT);
+                    }
+                    else {
+                        if (is_session_logged_in(info.remote_dashboard.session)) {
+                            return self.setMachineState(self.ONLINE_WITH_USER);
+                        } else {
+                            return self.setMachineState(self.ONLINE_WITHOUT_USER);
+                        }
+                    }
+                });
+
+            }
+            if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
+
+                get_stored_session(function(err, session){
+                    console.log(err, session);
+
+                    if (err || !session) self.setMachineState(self.OFFLINE_WITHOUT_USER);
+                    if (is_session_logged_in(session))  return self.setMachineState(self.OFFLINE_WITH_USER);
+                    return self.setMachineState(self.OFFLINE_WITHOUT_USER);
+                });
+
+            }
+            if (!info.remote_dashboard.available && !info.pouched_dashboard.synced) {
+                return self.states.setMachineState(self.OFFLINE_NO_HOPE);
+            }
+        });
+    };
+
+
+
+    var get_remote_session = function(callback) {
+        core.remote_db.request({
+            url: '../_session'
+        }, callback);
+    };
+
+    var is_session_logged_in = function(session) {
+        if (!session) return false;
+        if (!session.userCtx) return false;
+        if (!session.userCtx.name) return false;
+        return true;
+    };
+
+    var store_session = function(session, callback) {
+        if (!session) session = {userCtx: null};
+        get_stored_session(function(err, stored_session){
+            if (err || !stored_session) stored_session = session;
+            else stored_session.userCtx = session.userCtx;
+            stored_session._id = 'session';
+            console.log('store session', stored_session);
+            core.extra_db.put(stored_session, callback);
+        });
+
+    };
+
+    var get_stored_session = function(callback) {
+        core.extra_db.get('session', function(err, session){
+            console.log('retreive session', err, session);
+            callback(err, session);
+        });
+    };
+
+
+    var remote_dashboard = function(callback) {
+        Pouch(core.dashboard_db_url, function(err, db){
+            core.remote_db = db;
+            // we swallow errors
+            var results = {
+                db: db,
+                available: false,
+                session: null
+            };
+            if (err) return callback(null, results);
+
+            get_remote_session(function(err, session){
+                if (err) return callback(null, results);
+                results.available = true;
+                results.session = session;
+                callback(null, results);
+            });
+        });
+    };
+
+    var pouched_dashboard = function(callback) {
+        // return pouch, and if it has been synced with a dashbaord
+        Pouch(core.pouchName, function(err, db){
+            if (err) return callback(err);
+            core.local_db = db;
+            db.info(function(err, info) {
+                if (err) return callback(err);
+                var results = {
+                    db : db,
+                    synced : false
+                };
+                if (info.doc_count > 0) results.synced = true;
+                callback(null, results);
+            });
+        });
+    };
+
+    var pouched_extra = function(callback) {
+        // return pouch, and if it has been synced with a dashbaord
+        Pouch('dashbaord_extra', function(err, db){
+            if (err) return callback(err);
+            core.extra_db = db;
+            callback(null, db);
+        });
+    };
+
+
+    var t_poll_connectivity = function(callback) {
+        get_remote_session(function(err, session){
+
+            store_session(session, function(err2) {
+
+            });
+
+
+            if (err) {
+                // swallow errors
+                // need to get logged in or not
+                core.session = null;
+                return this.setMachineState(core.states);
+            }
+            extra_db.put({ _id: 'userCtx', 'userCtx': userCtx });
+        });
+    };
+
+
+    var t_first_sync = function() {
+        sync(function(err){
+            if (err) return core.states.setMachineState(core.states.READY_LOCAL_DB_UNSUPPORTED);
+            core.states.setMachineState(core.states.READY_HAVE_LOCAL_DB_ONLINE);
+        });
+    };
+
+    var sync = function(callback) {
+        Pouch.replicate(this.remote_db, this.local_db, {}, callback);
+    };
+
+
+    var t_login = function(user, password, callback) {
+        // body...
+    };
+
+    var t_logout = function(callback) {
+
+    };
+
+    var t_online = function(callback) {
+
+    };
+
+    var t_offline = function(callback) {
+
+    };
+
+    var topbar_local = function(callback) {
+        core.local_db.query(garden_views.dashboard_assets, {reduce: false, include_docs: true}, function(err, resp){
+            topbar_process(err, resp, callback);
+        });
+    };
+
+    var topbar_remote = function(callback) {
+        core.remote_db.query('dashboard/dashboard_assets', {reduce: false, include_docs: true}, function(err, resp){
+            topbar_process(err, resp, callback);
+        });
+    };
+
+    var topbar_process = function(err, resp, callback) {
+        var results = {
+            settingsDoc : {},
+            selectedThemeDoc : null,
+            apps: [],
+            scripts: []
+        };
+        async.forEach(resp.rows, function(row, cb){
+            if (row.key[0] === 0) results.settingsDoc = row.value;
+            if (row.key[0] === 1) {
+                if (row.key[3] == 'install') {
+                    results.apps.push({
+                        title : row.key[2],
+                        db :row.value.db,
+                        doc : row.doc
+                    });
+                }
+                if (row.key[3] == 'link') {
+                    results.apps.push({
+                        title : row.key[2],
+                        link :row.value.url,
+                        doc  : row.doc,
+                        external : true
+                    });
+                }
+            }
+            if (row.key[0] === 2) results.selectedThemeDoc = row.doc;
+            if (row.key[0] === 3) results.scripts.push(row.doc.src);
+            cb();
+        }, function(err){
+            callback(err, results);
+        });
+    };
+
+    var allAssets_local = function(callback) {
+        core.local_db.allDocs(callback);
+    };
+
+    var allAssets_remote = function(callback) {
+        core.remote_db.allDocs(callback);
+    };
+
+    var settings_local = function(callback) {
+        core.local_db.get('settings', function(err, data){
+            if (err && err.status === 404) return callback(null, {});
+            callback(err, data);
+        });
+    };
+
+    var settings_remote = function(callback) {
+        core.remote_db.get('settings', function(err, data){
+            if (err && err.status === 404) return callback(null, {});
+            callback(err, data);
+        });
+    };
+
+    initState();
 };
 
+
+/* --------- Public API  -------------------*/
+// all proxy to the statemachine for the right action
+// based on online/offline
+
+app.prototype.start = function(callback) {
+    var self = this;
+
+    var onState = function(event, oldState, newState) {
+        console.log(newState);
+        if (newState === 'INIT') return;
+        self.states.unbind(onState);
+        callback(null, newState);
+    };
+    self.states.bind(onState);
+    self.states.start();
+};
+
+app.prototype.sync = function(callback) {
+    this.states.sync(callback);
+};
+
+app.prototype.topbar = function(callback) {
+    this.states.topbar(callback);
+};
+
+app.prototype.allAssets = function(callback) {
+    this.states.allAssets(callback);
+};
+
+app.prototype.settings = function(callback) {
+    this.states.settings(callback);
+};
+
+app.prototype.poll = function(callback) {
+    this.states.poll(callback);
+};
+
+app.prototype.login = function(user, password, callback) {
+    this.states.login(user, password, callback);
+};
+
+app.prototype.logout = function() {
+    this.states.logout();
+};
+
+app.prototype.go_online = function() {
+    this.states.online();
+};
+
+app.prototype.go_offline = function() {
+    this.states.offline();
+};
 
 
 app.getPouchName = function(dashboard_db_url) {
@@ -7061,14 +7645,13 @@ app.getPouchName = function(dashboard_db_url) {
      var clean = parsed.pathname.replace(/\//g, '_');
      namespace += clean;
   }
-
-
   return namespace;
 };
 
 
 
-return app.dashboard;
+
+return app;
 
 }));
 (function (root, factory) {
@@ -7142,30 +7725,37 @@ return {
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
     this.dashboard_core = new DashboardCore(dashboard_db_url);
+
 };
 
 app.prototype.init = function(callback) {
-    var thus = this;
-    thus.dashboard_core.init(function(err){
-        if (err) return callback(err);
-            thus.dashboard_core.sync(function(err){
-            if (err) {
-                // prob offline?
+    var menu = this;
 
-            }
-            thus.dashboard_core.settings(function(err2, settingsDoc) {
-                if (err2) return callback(err2);
-                thus.settings = _.defaults(settingsDoc, default_settings);
-                callback(null, thus.settings);
-            });
+    // some inital values
+    var results = {
+        core : menu.dashboard_core,
+        state: 'OFFLINE_NO_HOPE',
+        settings: null
+    };
+
+    menu.dashboard_core.start(function(err, state) {
+
+        if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
+        results.state = state;
+
+        menu.dashboard_core.settings(function(err2, settingsDoc) {
+            if (err2) return callback(err2, results);
+            menu.settings = _.defaults(settingsDoc, default_settings);
+            results.settings = menu.settings;
+            callback(null, results);
         });
     });
 };
 
 app.prototype.getAppLinks = function(options, callback) {
-    var thus = this,
-        settings = thus.settings,
-        dashboard_url = thus.dashboard_ui_url(),
+    var menu = this,
+        settings = menu.settings,
+        dashboard_url = menu.dashboard_ui_url(),
         home_url = dashboard_url,
         settings_url  = dashboard_url + "settings";
 
@@ -7177,10 +7767,10 @@ app.prototype.getAppLinks = function(options, callback) {
         options = {};
     }
 
-    thus.dashboard_core.topbar(function(err, results) {
+    menu.dashboard_core.topbar(function(err, results) {
         results.apps = _.map(results.apps, function(app) {
             if (app.db) {
-                app.link = thus.app_url_ui(app.doc);
+                app.link = menu.app_url_ui(app.doc);
             }
             if (app.doc.remote_user && options.username && app.doc.remote_user !== username) {
                 app.remote_user_warning = true;
@@ -7401,7 +7991,7 @@ return __p;
 
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
-    this.menu_core = new GardenMenu(dashboard_db_url);
+    this.garden_menu = new GardenMenu(dashboard_db_url);
 };
 
 
@@ -7410,8 +8000,8 @@ var app = function(dashboard_db_url) {
 app.prototype.init = function(callback) {
     var widget = this;
 
-    widget.menu_core.init(function(err, settings){
-        widget.menu_core.getAppLinks(function(err, links){
+    widget.garden_menu.init(function(err, results){
+        widget.garden_menu.getAppLinks(function(err, links){
             if (err) return callback(err);
             widget.loadTopbar(links, callback);
         });
@@ -7426,7 +8016,6 @@ app.prototype.loadTopbar = function(data, callback) {
         $('body').prepend($topbar);
     }
     // check for other styles
-    console.log(css);
     jscss.embed(jscss.compile(css));
 
     $topbar.html(topbar_t(data));

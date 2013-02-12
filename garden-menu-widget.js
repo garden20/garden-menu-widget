@@ -30,11 +30,12 @@ var app = function(dashboard_db_url) {
     if (bowser.chrome && bowser.version < 19) {
         options.disablePouch= true;
     }
-    if (bowser.safari && bowser.version < 5) {
+    if (bowser.safari && bowser.version <= 5) {
         options.disablePouch= true;
     }
-
-    console.log('disable pouch: ', options.disablePouch);
+    if (bowser.iphone && bowser.version <= 5) {
+        options.disablePouch= true;
+    }
 
     this.garden_menu = new GardenMenu(dashboard_db_url, options);
 };
@@ -42,21 +43,16 @@ var app = function(dashboard_db_url) {
 
 function t(start_t, msg) {
     var now = new Date().getTime();
-    console.log(now - start_t, msg);
 }
 
 app.prototype.init = function(callback) {
     var widget = this;
 
     var time_s = new Date().getTime();
-    t(time_s, "menu init start");
     widget.garden_menu.init(function(err, results){
-        t(time_s, "menu init ended");
         widget.garden_menu.getAppLinks(function(err, links){
-            t(time_s, "get links ended");
             if (err) return callback(err);
             widget.loadTopbar(links, function(err){
-                t(time_s, "t bar loaded");
                 callback(err);
             });
         });

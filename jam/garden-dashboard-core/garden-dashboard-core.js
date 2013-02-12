@@ -105,14 +105,11 @@ app = function(dashboard_db_url, options) {
                     return cb(null, {unsupported: true});
                 }
                 try {
-                    console.log('before extre');
                     pouched_extra(function(err, results){
-                        console.log('here b');
                         if (err) return cb(null, {unsupported: true});
                         cb (null, results);
                     });
                 } catch(e) {
-                    console.log('err b');
                     cb(null, {unsupported: true});
                 }
             }
@@ -140,7 +137,6 @@ app = function(dashboard_db_url, options) {
             if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
 
                 get_stored_session(function(err, session){
-                    console.log(err, session);
 
                     if (err || !session) self.setMachineState(self.OFFLINE_WITHOUT_USER);
                     if (is_session_logged_in(session))  return self.setMachineState(self.OFFLINE_WITH_USER);
@@ -188,49 +184,42 @@ app = function(dashboard_db_url, options) {
 
 
     var remote_dashboard = function(callback) {
-        console.log('r d b');
-        try {
-            Pouch(core.dashboard_db_url, function(err, db){
-                console.log('r d a');
-                core.remote_db = db;
-                // we swallow errors
-                var results = {
-                    db: db,
-                    available: false,
-                    session: null
-                };
-                if (err) return callback(null, results);
+        Pouch(core.dashboard_db_url, function(err, db){
+            core.remote_db = db;
+            // we swallow errors
+            var results = {
+                db: db,
+                available: false,
+                session: null
+            };
+            if (err) return callback(null, results);
 
-                results.available = true;
-                callback(null, results);
-            });
-        }catch(e) {
-            console.log('caught rd');
-        }
+            results.available = true;
+            callback(null, results);
+        });
+
     };
 
     var pouched_dashboard = function(callback) {
         // return pouch, and if it has been synced with a dashbaord
 
-        console.log('pouched db s');
-        try {
-        Pouch(core.pouchName, function(err, db){
 
-            console.log('pouched db f');
-            if (err) return callback(err);
-            core.local_db = db;
-            db.info(function(err, info) {
+        try {
+            Pouch(core.pouchName, function(err, db){
                 if (err) return callback(err);
-                var results = {
-                    db : db,
-                    synced : false
-                };
-                if (info.doc_count > 0) results.synced = true;
-                callback(null, results);
+                core.local_db = db;
+                db.info(function(err, info) {
+                    if (err) return callback(err);
+                    var results = {
+                        db : db,
+                        synced : false
+                    };
+                    if (info.doc_count > 0) results.synced = true;
+                    callback(null, results);
+                });
             });
-        });
         } catch (e) {
-            console.log('pouched db rrrrrrrere');
+            return callback(null, {unsupported: true});
         }
     };
 
@@ -265,7 +254,6 @@ app = function(dashboard_db_url, options) {
 
     var t_first_sync = function() {
         var self = this;
-        console.log('first sync');
         sync(function(err){
             if (err) return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
 
@@ -379,7 +367,6 @@ app.prototype.start = function(callback) {
     var self = this;
 
     var onState = function(event, oldState, newState) {
-        console.log(newState);
         if (newState === 'INIT') return;
         self.states.unbind(onState);
         callback(null, newState);

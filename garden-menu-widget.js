@@ -2,17 +2,41 @@
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js'],factory);
+        define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js', 'modernizer'],factory);
     } else {
         root.garden_menu_widget = factory(
-            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.JST["templates/topbar.underscore"]);
+            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.Modernizr, root.JST["templates/topbar.underscore"]);
     }
-}(this, function (url, GardenMenu, jscss, css, topbar_t) {
+}(this, function (url, GardenMenu, jscss, css, Modernizr, topbar_t) {
 
 
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
-    this.garden_menu = new GardenMenu(dashboard_db_url);
+
+    var options = {
+        disablePouch: true
+    };
+    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
+        options.disablePouch = false;
+    }
+
+    // also check version
+    if (bowser.firefox && bowser.version < 12) {
+        options.disablePouch= true;
+    }
+    if (bowser.opera && bowser.version < 12) {
+        options.disablePouch= true;
+    }
+    if (bowser.chrome && bowser.version < 19) {
+        options.disablePouch= true;
+    }
+    if (bowser.safari && bowser.version < 5) {
+        options.disablePouch= true;
+    }
+
+    console.log('disable pouch: ', options.disablePouch);
+
+    this.garden_menu = new GardenMenu(dashboard_db_url, options);
 };
 
 

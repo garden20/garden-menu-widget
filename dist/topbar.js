@@ -2728,6 +2728,139 @@ function parseHost(host) {
 
 });
 
+/*!
+  * Bowser - a browser detector
+  * https://github.com/ded/bowser
+  * MIT License | (c) Dustin Diaz 2011
+  */
+(function (root, factory) {
+    if (typeof exports === 'object') {
+        module.exports = factory( );
+    } else if (typeof define === 'function' && define.amd) {
+        define([],factory);
+    } else {
+        root.bowser = factory();
+    }
+}(this, function (async, Pouch, garden_views, url, Stately) {
+  /**
+    * navigator.userAgent =>
+    * Chrome:  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.57 Safari/534.24"
+    * Opera:   "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.7; U; en) Presto/2.7.62 Version/11.01"
+    * Safari:  "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1"
+    * IE:      "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C)"
+    * Firefox: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0) Gecko/20100101 Firefox/4.0"
+    * iPhone:  "Mozilla/5.0 (iPhone Simulator; U; CPU iPhone OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5"
+    * iPad:    "Mozilla/5.0 (iPad; U; CPU OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5",
+    * Android: "Mozilla/5.0 (Linux; U; Android 2.3.4; en-us; T-Mobile G2 Build/GRJ22) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
+    * Touchpad: "Mozilla/5.0 (hp-tabled;Linux;hpwOS/3.0.5; U; en-US)) AppleWebKit/534.6 (KHTML, like Gecko) wOSBrowser/234.83 Safari/534.6 TouchPad/1.0"
+    * PhantomJS: "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.5.0 Safari/534.34"
+    */
+
+  var ua = navigator.userAgent
+    , t = true
+    , ie = /msie/i.test(ua)
+    , chrome = /chrome/i.test(ua)
+    , phantom = /phantom/i.test(ua)
+    , safari = /safari/i.test(ua) && !chrome && !phantom
+    , iphone = /iphone/i.test(ua)
+    , ipad = /ipad/i.test(ua)
+    , touchpad = /touchpad/i.test(ua)
+    , android = /android/i.test(ua)
+    , opera = /opera/i.test(ua)
+    , firefox = /firefox/i.test(ua)
+    , gecko = /gecko\//i.test(ua)
+    , seamonkey = /seamonkey\//i.test(ua)
+    , webkitVersion = /version\/(\d+(\.\d+)?)/i
+    , o
+
+  function detect() {
+
+    if (ie) return {
+        msie: t
+      , version: ua.match(/msie (\d+(\.\d+)?);/i)[1]
+    }
+    if (chrome) return {
+        webkit: t
+      , chrome: t
+      , version: ua.match(/chrome\/(\d+(\.\d+)?)/i)[1]
+    }
+    if (phantom) return {
+        webkit: t
+      , phantom: t
+      , version: ua.match(/phantomjs\/(\d+(\.\d+)+)/i)[1]
+    }
+    if (touchpad) return {
+        webkit: t
+      , touchpad: t
+      , version : ua.match(/touchpad\/(\d+(\.\d+)?)/i)[1]
+    }
+    if (iphone || ipad) {
+      o = {
+          webkit: t
+        , mobile: t
+        , ios: t
+        , iphone: iphone
+        , ipad: ipad
+      }
+      // WTF: version is not part of user agent in web apps
+      if (webkitVersion.test(ua)) {
+        o.version = ua.match(webkitVersion)[1]
+      }
+      return o
+    }
+    if (android) return {
+        webkit: t
+      , android: t
+      , mobile: t
+      , version: ua.match(webkitVersion)[1]
+    }
+    if (safari) return {
+        webkit: t
+      , safari: t
+      , version: ua.match(webkitVersion)[1]
+    }
+    if (opera) return {
+        opera: t
+      , version: ua.match(webkitVersion)[1]
+    }
+    if (gecko) {
+      o = {
+          gecko: t
+        , mozilla: t
+        , version: ua.match(/firefox\/(\d+(\.\d+)?)/i)[1]
+      }
+      if (firefox) o.firefox = t
+      return o
+    }
+    if (seamonkey) return {
+        seamonkey: t
+      , version: ua.match(/seamonkey\/(\d+(\.\d+)?)/i)[1]
+    }
+  }
+
+  var bowser = detect()
+
+  // Graded Browser Support
+  // http://developer.yahoo.com/yui/articles/gbs
+  if ((bowser.msie && bowser.version >= 7) ||
+      (bowser.chrome && bowser.version >= 10) ||
+      (bowser.firefox && bowser.version >= 4.0) ||
+      (bowser.safari && bowser.version >= 5) ||
+      (bowser.opera && bowser.version >= 10.0)) {
+    bowser.a = t;
+  }
+
+  else if ((bowser.msie && bowser.version < 7) ||
+      (bowser.chrome && bowser.version < 10) ||
+      (bowser.firefox && bowser.version < 4.0) ||
+      (bowser.safari && bowser.version < 5) ||
+      (bowser.opera && bowser.version < 10.0)) {
+    bowser.c = t
+  } else bowser.x = t
+
+  return bowser
+}));
+
 /*PouchDB*/
 
 
@@ -7124,6 +7257,243 @@ Pouch.plugin('mapreduce', MapReduce);
 
  })(this);
 
+/* Modernizr 2.6.2 (Custom Build) | MIT & BSD
+ * Build: http://modernizr.com/download/#-applicationcache-indexeddb-localstorage-websqldatabase-testprop-testallprops-domprefixes
+ */
+;
+
+
+
+window.Modernizr = (function( window, document, undefined ) {
+
+    var version = '2.6.2',
+
+    Modernizr = {},
+
+
+    docElement = document.documentElement,
+
+    mod = 'modernizr',
+    modElem = document.createElement(mod),
+    mStyle = modElem.style,
+
+    inputElem  ,
+
+
+    toString = {}.toString,    omPrefixes = 'Webkit Moz O ms',
+
+    cssomPrefixes = omPrefixes.split(' '),
+
+    domPrefixes = omPrefixes.toLowerCase().split(' '),
+
+
+    tests = {},
+    inputs = {},
+    attrs = {},
+
+    classes = [],
+
+    slice = classes.slice,
+
+    featureName,
+
+
+
+    _hasOwnProperty = ({}).hasOwnProperty, hasOwnProp;
+
+    if ( !is(_hasOwnProperty, 'undefined') && !is(_hasOwnProperty.call, 'undefined') ) {
+      hasOwnProp = function (object, property) {
+        return _hasOwnProperty.call(object, property);
+      };
+    }
+    else {
+      hasOwnProp = function (object, property) {
+        return ((property in object) && is(object.constructor.prototype[property], 'undefined'));
+      };
+    }
+
+
+    if (!Function.prototype.bind) {
+      Function.prototype.bind = function bind(that) {
+
+        var target = this;
+
+        if (typeof target != "function") {
+            throw new TypeError();
+        }
+
+        var args = slice.call(arguments, 1),
+            bound = function () {
+
+            if (this instanceof bound) {
+
+              var F = function(){};
+              F.prototype = target.prototype;
+              var self = new F();
+
+              var result = target.apply(
+                  self,
+                  args.concat(slice.call(arguments))
+              );
+              if (Object(result) === result) {
+                  return result;
+              }
+              return self;
+
+            } else {
+
+              return target.apply(
+                  that,
+                  args.concat(slice.call(arguments))
+              );
+
+            }
+
+        };
+
+        return bound;
+      };
+    }
+
+    function setCss( str ) {
+        mStyle.cssText = str;
+    }
+
+    function setCssAll( str1, str2 ) {
+        return setCss(prefixes.join(str1 + ';') + ( str2 || '' ));
+    }
+
+    function is( obj, type ) {
+        return typeof obj === type;
+    }
+
+    function contains( str, substr ) {
+        return !!~('' + str).indexOf(substr);
+    }
+
+    function testProps( props, prefixed ) {
+        for ( var i in props ) {
+            var prop = props[i];
+            if ( !contains(prop, "-") && mStyle[prop] !== undefined ) {
+                return prefixed == 'pfx' ? prop : true;
+            }
+        }
+        return false;
+    }
+
+    function testDOMProps( props, obj, elem ) {
+        for ( var i in props ) {
+            var item = obj[props[i]];
+            if ( item !== undefined) {
+
+                            if (elem === false) return props[i];
+
+                            if (is(item, 'function')){
+                                return item.bind(elem || obj);
+                }
+
+                            return item;
+            }
+        }
+        return false;
+    }
+
+    function testPropsAll( prop, prefixed, elem ) {
+
+        var ucProp  = prop.charAt(0).toUpperCase() + prop.slice(1),
+            props   = (prop + ' ' + cssomPrefixes.join(ucProp + ' ') + ucProp).split(' ');
+
+            if(is(prefixed, "string") || is(prefixed, "undefined")) {
+          return testProps(props, prefixed);
+
+            } else {
+          props = (prop + ' ' + (domPrefixes).join(ucProp + ' ') + ucProp).split(' ');
+          return testDOMProps(props, prefixed, elem);
+        }
+    }
+
+    tests['websqldatabase'] = function() {
+      return !!window.openDatabase;
+    };
+
+    tests['indexedDB'] = function() {
+      return !!testPropsAll("indexedDB", window);
+    };
+    tests['localstorage'] = function() {
+        try {
+            localStorage.setItem(mod, mod);
+            localStorage.removeItem(mod);
+            return true;
+        } catch(e) {
+            return false;
+        }
+    };
+    tests['applicationcache'] = function() {
+        return !!window.applicationCache;
+    };
+
+
+    for ( var feature in tests ) {
+        if ( hasOwnProp(tests, feature) ) {
+                                    featureName  = feature.toLowerCase();
+            Modernizr[featureName] = tests[feature]();
+
+            classes.push((Modernizr[featureName] ? '' : 'no-') + featureName);
+        }
+    }
+
+
+
+     Modernizr.addTest = function ( feature, test ) {
+       if ( typeof feature == 'object' ) {
+         for ( var key in feature ) {
+           if ( hasOwnProp( feature, key ) ) {
+             Modernizr.addTest( key, feature[ key ] );
+           }
+         }
+       } else {
+
+         feature = feature.toLowerCase();
+
+         if ( Modernizr[feature] !== undefined ) {
+                                              return Modernizr;
+         }
+
+         test = typeof test == 'function' ? test() : test;
+
+         if (typeof enableClasses !== "undefined" && enableClasses) {
+           docElement.className += ' ' + (test ? '' : 'no-') + feature;
+         }
+         Modernizr[feature] = test;
+
+       }
+
+       return Modernizr;
+     };
+
+
+    setCss('');
+    modElem = inputElem = null;
+
+
+    Modernizr._version      = version;
+
+    Modernizr._domPrefixes  = domPrefixes;
+    Modernizr._cssomPrefixes  = cssomPrefixes;
+
+
+
+    Modernizr.testProp      = function(prop){
+        return testProps([prop]);
+    };
+
+    Modernizr.testAllProps  = testPropsAll;
+
+
+    return Modernizr;
+
+})(this, this.document);
+;
 (function (root, factory) {
     if (typeof exports === 'object') {
         module.exports = factory();
@@ -7272,6 +7642,7 @@ var app = {};
 app = function(dashboard_db_url, options) {
     var core = this;
     core.dashboard_db_url = dashboard_db_url;
+    core.options = options;
     core.pouchName = app.getPouchName(dashboard_db_url);
 
     /*------   Private Methods ------------------*/
@@ -7344,10 +7715,41 @@ app = function(dashboard_db_url, options) {
 
         async.parallel({
             remote_dashboard : remote_dashboard,
-            pouched_dashboard : pouched_dashboard,
-            pouched_extra : pouched_extra
+            pouched_dashboard : function(cb) {
+
+                if (core.options.disablePouch) {
+                    return cb(null, {unsupported: true});
+                }
+                try {
+                    pouched_dashboard(function(err, results){
+                        if (err) return cb(null, {unsupported: true});
+                        cb (null, results);
+                    });
+                } catch(e) {
+                    cb(null, {unsupported: true});
+                }
+            },
+            pouched_extra : function(cb) {
+
+                if (core.options.disablePouch) {
+                    return cb(null, {unsupported: true});
+                }
+                try {
+                    console.log('before extre');
+                    pouched_extra(function(err, results){
+                        console.log('here b');
+                        if (err) return cb(null, {unsupported: true});
+                        cb (null, results);
+                    });
+                } catch(e) {
+                    console.log('err b');
+                    cb(null, {unsupported: true});
+                }
+            }
+
+
         }, function(err, info){
-            if (err) {
+            if (err || info.pouched_dashboard.unsupported) {
                 return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
             }
             if (info.remote_dashboard.available) {
@@ -7364,8 +7766,6 @@ app = function(dashboard_db_url, options) {
                         return self.setMachineState(self.ONLINE_WITHOUT_USER);
                     });
                 }
-
-
             }
             if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
 
@@ -7405,7 +7805,6 @@ app = function(dashboard_db_url, options) {
             if (err || !stored_session) stored_session = session;
             else stored_session.userCtx = session.userCtx;
             stored_session._id = 'session';
-            console.log('store session', stored_session);
             core.extra_db.put(stored_session, callback);
         });
 
@@ -7413,31 +7812,41 @@ app = function(dashboard_db_url, options) {
 
     var get_stored_session = function(callback) {
         core.extra_db.get('session', function(err, session){
-            console.log('retreive session', err, session);
             callback(err, session);
         });
     };
 
 
     var remote_dashboard = function(callback) {
-        Pouch(core.dashboard_db_url, function(err, db){
-            core.remote_db = db;
-            // we swallow errors
-            var results = {
-                db: db,
-                available: false,
-                session: null
-            };
-            if (err) return callback(null, results);
+        console.log('r d b');
+        try {
+            Pouch(core.dashboard_db_url, function(err, db){
+                console.log('r d a');
+                core.remote_db = db;
+                // we swallow errors
+                var results = {
+                    db: db,
+                    available: false,
+                    session: null
+                };
+                if (err) return callback(null, results);
 
-            results.available = true;
-            callback(null, results);
-        });
+                results.available = true;
+                callback(null, results);
+            });
+        }catch(e) {
+            console.log('caught rd');
+        }
     };
 
     var pouched_dashboard = function(callback) {
         // return pouch, and if it has been synced with a dashbaord
+
+        console.log('pouched db s');
+        try {
         Pouch(core.pouchName, function(err, db){
+
+            console.log('pouched db f');
             if (err) return callback(err);
             core.local_db = db;
             db.info(function(err, info) {
@@ -7450,6 +7859,9 @@ app = function(dashboard_db_url, options) {
                 callback(null, results);
             });
         });
+        } catch (e) {
+            console.log('pouched db rrrrrrrere');
+        }
     };
 
     var pouched_extra = function(callback) {
@@ -7729,9 +8141,13 @@ return {
     }
 }(this, function (_, DashboardCore, default_settings, url) {
 
-var app = function(dashboard_db_url) {
+var app = function(dashboard_db_url, options) {
     this.dashboard_db_url = dashboard_db_url;
-    this.dashboard_core = new DashboardCore(dashboard_db_url);
+    this.options = options;
+    this.dashboard_core = new DashboardCore(dashboard_db_url, options);
+
+    // in case things are called out of order, fallback to default settings.
+    this.settings = default_settings;
 
 };
 
@@ -7747,44 +8163,35 @@ app.prototype.init = function(callback) {
 
     menu.dashboard_core.start(function(err, state) {
 
-        console.log(state);
-
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
 
-        menu.dashboard_core.settings(function(err2, settingsDoc) {
-            if (err2) return callback(err2, results);
-            menu.settings = _.defaults(settingsDoc, default_settings);
-            results.settings = menu.settings;
-            callback(null, results);
-
-
-            // sneaky sync
-            if (state === 'FIRST_VISIT') {
-                console.log('sneeky sync');
-                menu.dashboard_core.sync(function(err){});
-            }
-
-        });
+        callback(null, state);
     });
 };
 
 app.prototype.getAppLinks = function(options, callback) {
-    var menu = this,
-        settings = menu.settings,
-        dashboard_url = menu.dashboard_ui_url(),
-        home_url = dashboard_url,
-        settings_url  = dashboard_url + "settings";
+    var menu = this;
 
-    if (settings.frontpage.use_link) {
-        home_url = settings.frontpage.link_url;
-    }
     if (!callback) {
         callback = options;
         options = {};
     }
 
     menu.dashboard_core.topbar(function(err, results) {
+
+
+        menu.settings = _.defaults(results.settingsDoc, default_settings);
+        var settings = results.settingsDoc,
+            dashboard_url = menu.dashboard_ui_url(),
+            home_url = dashboard_url,
+            settings_url  = dashboard_url + "settings";
+
+
+        if (settings.frontpage.use_link) {
+            home_url = settings.frontpage.link_url;
+        }
+
         results.apps = _.map(results.apps, function(app) {
             if (app.db) {
                 app.link = menu.app_url_ui(app.doc);
@@ -7998,17 +8405,41 @@ return __p;
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js'],factory);
+        define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js', 'modernizer'],factory);
     } else {
         root.garden_menu_widget = factory(
-            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.JST["templates/topbar.underscore"]);
+            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.Modernizr, root.JST["templates/topbar.underscore"]);
     }
-}(this, function (url, GardenMenu, jscss, css, topbar_t) {
+}(this, function (url, GardenMenu, jscss, css, Modernizr, topbar_t) {
 
 
 var app = function(dashboard_db_url) {
     this.dashboard_db_url = dashboard_db_url;
-    this.garden_menu = new GardenMenu(dashboard_db_url);
+
+    var options = {
+        disablePouch: true
+    };
+    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
+        options.disablePouch = false;
+    }
+
+    // also check version
+    if (bowser.firefox && bowser.version < 12) {
+        options.disablePouch= true;
+    }
+    if (bowser.opera && bowser.version < 12) {
+        options.disablePouch= true;
+    }
+    if (bowser.chrome && bowser.version < 19) {
+        options.disablePouch= true;
+    }
+    if (bowser.safari && bowser.version < 5) {
+        options.disablePouch= true;
+    }
+
+    console.log('disable pouch: ', options.disablePouch);
+
+    this.garden_menu = new GardenMenu(dashboard_db_url, options);
 };
 
 

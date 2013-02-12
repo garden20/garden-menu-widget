@@ -8,9 +8,13 @@
     }
 }(this, function (_, DashboardCore, default_settings, url) {
 
-var app = function(dashboard_db_url) {
+var app = function(dashboard_db_url, options) {
     this.dashboard_db_url = dashboard_db_url;
-    this.dashboard_core = new DashboardCore(dashboard_db_url);
+    this.options = options;
+    this.dashboard_core = new DashboardCore(dashboard_db_url, options);
+
+    // in case things are called out of order, fallback to default settings.
+    this.settings = default_settings;
 
 };
 
@@ -26,44 +30,35 @@ app.prototype.init = function(callback) {
 
     menu.dashboard_core.start(function(err, state) {
 
-        console.log(state);
-
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
 
-        menu.dashboard_core.settings(function(err2, settingsDoc) {
-            if (err2) return callback(err2, results);
-            menu.settings = _.defaults(settingsDoc, default_settings);
-            results.settings = menu.settings;
-            callback(null, results);
-
-
-            // sneaky sync
-            if (state === 'FIRST_VISIT') {
-                console.log('sneeky sync');
-                menu.dashboard_core.sync(function(err){});
-            }
-
-        });
+        callback(null, state);
     });
 };
 
 app.prototype.getAppLinks = function(options, callback) {
-    var menu = this,
-        settings = menu.settings,
-        dashboard_url = menu.dashboard_ui_url(),
-        home_url = dashboard_url,
-        settings_url  = dashboard_url + "settings";
+    var menu = this;
 
-    if (settings.frontpage.use_link) {
-        home_url = settings.frontpage.link_url;
-    }
     if (!callback) {
         callback = options;
         options = {};
     }
 
     menu.dashboard_core.topbar(function(err, results) {
+
+
+        menu.settings = _.defaults(results.settingsDoc, default_settings);
+        var settings = results.settingsDoc,
+            dashboard_url = menu.dashboard_ui_url(),
+            home_url = dashboard_url,
+            settings_url  = dashboard_url + "settings";
+
+
+        if (settings.frontpage.use_link) {
+            home_url = settings.frontpage.link_url;
+        }
+
         results.apps = _.map(results.apps, function(app) {
             if (app.db) {
                 app.link = menu.app_url_ui(app.doc);

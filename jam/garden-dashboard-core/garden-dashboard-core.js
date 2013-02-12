@@ -12,6 +12,7 @@ var app = {};
 app = function(dashboard_db_url, options) {
     var core = this;
     core.dashboard_db_url = dashboard_db_url;
+    core.options = options;
     core.pouchName = app.getPouchName(dashboard_db_url);
 
     /*------   Private Methods ------------------*/
@@ -84,10 +85,41 @@ app = function(dashboard_db_url, options) {
 
         async.parallel({
             remote_dashboard : remote_dashboard,
-            pouched_dashboard : pouched_dashboard,
-            pouched_extra : pouched_extra
+            pouched_dashboard : function(cb) {
+
+                if (core.options.disablePouch) {
+                    return cb(null, {unsupported: true});
+                }
+                try {
+                    pouched_dashboard(function(err, results){
+                        if (err) return cb(null, {unsupported: true});
+                        cb (null, results);
+                    });
+                } catch(e) {
+                    cb(null, {unsupported: true});
+                }
+            },
+            pouched_extra : function(cb) {
+
+                if (core.options.disablePouch) {
+                    return cb(null, {unsupported: true});
+                }
+                try {
+                    console.log('before extre');
+                    pouched_extra(function(err, results){
+                        console.log('here b');
+                        if (err) return cb(null, {unsupported: true});
+                        cb (null, results);
+                    });
+                } catch(e) {
+                    console.log('err b');
+                    cb(null, {unsupported: true});
+                }
+            }
+
+
         }, function(err, info){
-            if (err) {
+            if (err || info.pouched_dashboard.unsupported) {
                 return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
             }
             if (info.remote_dashboard.available) {
@@ -104,8 +136,6 @@ app = function(dashboard_db_url, options) {
                         return self.setMachineState(self.ONLINE_WITHOUT_USER);
                     });
                 }
-
-
             }
             if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
 
@@ -145,7 +175,6 @@ app = function(dashboard_db_url, options) {
             if (err || !stored_session) stored_session = session;
             else stored_session.userCtx = session.userCtx;
             stored_session._id = 'session';
-            console.log('store session', stored_session);
             core.extra_db.put(stored_session, callback);
         });
 
@@ -153,31 +182,41 @@ app = function(dashboard_db_url, options) {
 
     var get_stored_session = function(callback) {
         core.extra_db.get('session', function(err, session){
-            console.log('retreive session', err, session);
             callback(err, session);
         });
     };
 
 
     var remote_dashboard = function(callback) {
-        Pouch(core.dashboard_db_url, function(err, db){
-            core.remote_db = db;
-            // we swallow errors
-            var results = {
-                db: db,
-                available: false,
-                session: null
-            };
-            if (err) return callback(null, results);
+        console.log('r d b');
+        try {
+            Pouch(core.dashboard_db_url, function(err, db){
+                console.log('r d a');
+                core.remote_db = db;
+                // we swallow errors
+                var results = {
+                    db: db,
+                    available: false,
+                    session: null
+                };
+                if (err) return callback(null, results);
 
-            results.available = true;
-            callback(null, results);
-        });
+                results.available = true;
+                callback(null, results);
+            });
+        }catch(e) {
+            console.log('caught rd');
+        }
     };
 
     var pouched_dashboard = function(callback) {
         // return pouch, and if it has been synced with a dashbaord
+
+        console.log('pouched db s');
+        try {
         Pouch(core.pouchName, function(err, db){
+
+            console.log('pouched db f');
             if (err) return callback(err);
             core.local_db = db;
             db.info(function(err, info) {
@@ -190,6 +229,9 @@ app = function(dashboard_db_url, options) {
                 callback(null, results);
             });
         });
+        } catch (e) {
+            console.log('pouched db rrrrrrrere');
+        }
     };
 
     var pouched_extra = function(callback) {

@@ -6,8 +6,9 @@ var srcFiles = [
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
   "jam/stately/Stately.js",
+  "lib/bowser.js",
   "lib/pouchdb-nightly.js",
-
+  "lib/Modernizer.custom.js",
   "jam/garden-views/garden-views.js",
   "jam/garden-dashboard-core/garden-dashboard-core.js",
   "jam/garden-default-settings/garden-default-settings.js",

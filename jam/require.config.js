@@ -6,6 +6,11 @@ var jam = {
             "main": "./lib/async"
         },
         {
+            "name": "bowser",
+            "location": "jam/bowser",
+            "main": "./bowser.js"
+        },
+        {
             "name": "garden-dashboard-core",
             "location": "jam/garden-dashboard-core",
             "main": "garden-dashboard-core.js"
@@ -39,6 +44,15 @@ var jam = {
             "name": "md5",
             "location": "jam/md5",
             "main": "md5.js"
+        },
+        {
+            "name": "modernizer",
+            "location": "jam/modernizer",
+            "main": "modernizr-development.js"
+        },
+        {
+            "name": "modernizr",
+            "location": "jam/modernizr"
         },
         {
             "name": "pouchdb",

@@ -26,6 +26,8 @@ app.prototype.init = function(callback) {
 
     menu.dashboard_core.start(function(err, state) {
 
+        console.log(state);
+
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
 
@@ -34,6 +36,14 @@ app.prototype.init = function(callback) {
             menu.settings = _.defaults(settingsDoc, default_settings);
             results.settings = menu.settings;
             callback(null, results);
+
+
+            // sneaky sync
+            if (state === 'FIRST_VISIT') {
+                console.log('sneeky sync');
+                menu.dashboard_core.sync(function(err){});
+            }
+
         });
     });
 };

@@ -92,18 +92,19 @@ app = function(dashboard_db_url, options) {
             }
             if (info.remote_dashboard.available) {
 
-                store_session(info.remote_dashboard.session, function(err, rest){
-                    if (!info.pouched_dashboard.synced) {
-                        return self.setMachineState(self.FIRST_VISIT);
-                    }
-                    else {
-                        if (is_session_logged_in(info.remote_dashboard.session)) {
+                if (!info.pouched_dashboard.synced) {
+                    return self.setMachineState(self.FIRST_VISIT);
+                }
+                else {
+
+                    get_stored_session(function(err, session){
+                        if (is_session_logged_in(session)) {
                             return self.setMachineState(self.ONLINE_WITH_USER);
-                        } else {
-                            return self.setMachineState(self.ONLINE_WITHOUT_USER);
                         }
-                    }
-                });
+                        return self.setMachineState(self.ONLINE_WITHOUT_USER);
+                    });
+                }
+
 
             }
             if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
@@ -169,12 +170,8 @@ app = function(dashboard_db_url, options) {
             };
             if (err) return callback(null, results);
 
-            get_remote_session(function(err, session){
-                if (err) return callback(null, results);
-                results.available = true;
-                results.session = session;
-                callback(null, results);
-            });
+            results.available = true;
+            callback(null, results);
         });
     };
 
@@ -225,14 +222,22 @@ app = function(dashboard_db_url, options) {
 
 
     var t_first_sync = function() {
+        var self = this;
+        console.log('first sync');
         sync(function(err){
-            if (err) return core.states.setMachineState(core.states.READY_LOCAL_DB_UNSUPPORTED);
-            core.states.setMachineState(core.states.READY_HAVE_LOCAL_DB_ONLINE);
+            if (err) return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
+
+            get_stored_session(function(err, session){
+                if (err || !session) self.setMachineState(self.ONLINE_WITHOUT_USER);
+                if (is_session_logged_in(session))  return self.setMachineState(self.ONLINE_WITH_USER);
+                return self.setMachineState(self.ONLINE_WITHOUT_USER);
+            });
+
         });
     };
 
     var sync = function(callback) {
-        Pouch.replicate(this.remote_db, this.local_db, {}, callback);
+        Pouch.replicate(core.remote_db, core.local_db, {}, callback);
     };
 
 

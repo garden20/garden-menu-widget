@@ -16,15 +16,25 @@ var app = function(dashboard_db_url) {
 };
 
 
-
+function t(start_t, msg) {
+    var now = new Date().getTime();
+    console.log(now - start_t, msg);
+}
 
 app.prototype.init = function(callback) {
     var widget = this;
 
+    var time_s = new Date().getTime();
+    t(time_s, "menu init start");
     widget.garden_menu.init(function(err, results){
+        t(time_s, "menu init ended");
         widget.garden_menu.getAppLinks(function(err, links){
+            t(time_s, "get links ended");
             if (err) return callback(err);
-            widget.loadTopbar(links, callback);
+            widget.loadTopbar(links, function(err){
+                t(time_s, "t bar loaded");
+                callback(err);
+            });
         });
     });
 };
@@ -133,6 +143,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar').data('ready', true);
     $('#dashboard-topbar').trigger('ready');
+    callback(null);
 };
 
 

@@ -5,6 +5,7 @@ var srcFiles = [
   "lib/url.js",
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
+  "jam/stately/Stately.js",
   "lib/pouchdb-nightly.js",
 
   "jam/garden-views/garden-views.js",

@@ -2732,7 +2732,7 @@ function parseHost(host) {
 
 
 (function() {
- 
+
 
 // BEGIN Math.uuid.js
 
@@ -3145,7 +3145,7 @@ var Pouch = function Pouch(name, opts, callback) {
     callback = opts;
     opts = {};
   }
-  
+
   if (typeof name === 'object') {
     opts = name;
     name = undefined;
@@ -3988,7 +3988,7 @@ var writeCheckpoint = function(src, target, opts, checkpoint, callback) {
   if(typeof opts.filter != "undefined"){
     filter_func = opts.filter.toString();
   }
-  
+
   var check = {
     _id: '_local/' + Crypto.MD5(src.id() + target.id() + filter_func),
     last_seq: checkpoint
@@ -4088,7 +4088,7 @@ var ajax = function ajax(options, callback) {
     if (!("body" in options)) {
       options.body = null;
     }
-    
+
     var abortReq = function() {
         timedout=true;
         xhr.abort();
@@ -4560,20 +4560,21 @@ var HttpPouch = function(opts, callback) {
       }
     });
   };
-  ajax({auth: host.auth, method: 'GET', url: db_url}, function(err, ret) {
-    //check if the db exists
-    if (err) {
-      if (err.status === 404) {
-        //if it doesn't, create it
-        createDB();
-      } else {
-        call(callback, err);
-      }
-    } else {
-      //go do stuff with the db
-      call(callback, null, api);
-      }
-  });
+
+  // ajax({auth: host.auth, method: 'GET', url: db_url}, function(err, ret) {
+  //   //check if the db exists
+  //   if (err) {
+  //     if (err.status === 404) {
+  //       //if it doesn't, create it
+  //       createDB();
+  //     } else {
+  //       call(callback, err);
+  //     }
+  //   } else {
+  //     //go do stuff with the db
+  //     call(callback, null, api);
+  //     }
+  // });
 
   api.type = function() {
     return 'http';
@@ -5017,13 +5018,13 @@ var HttpPouch = function(opts, callback) {
         if (err) fetchRetryCount += 1;
         else fetchRetryCount = 0;
         var timeoutMultiplier = 1 << fetchRetryCount;       // i.e. Math.pow(2, fetchRetryCount)
-        
+
         var retryWait = fetchTimeout * timeoutMultiplier;
         var maximumWait = opts.maximumWait || 30000;
         if (retryWait > maximumWait) {
           call(opts.complete, err || Pouch.Errors.UNKNOWN_ERROR, null);
         }
-        
+
         // Queue a call to fetch again with the newest sequence number
         setTimeout(function () {
           fetch(last_seq, fetched);
@@ -5094,6 +5095,7 @@ var HttpPouch = function(opts, callback) {
     call(callback, null);
   };
 
+  call(callback, null, api);
   return api;
 };
 
@@ -6746,7 +6748,7 @@ var webSqlPouch = function(opts, callback) {
               call(opts.onChange, c);
             }
           });
-          
+
           if (opts.continuous && !opts.cancelled) {
             webSqlPouch.Changes.addListener(name, id, api, opts);
           }
@@ -6927,7 +6929,7 @@ var MapReduce = function(db) {
         id: current.doc._id,
         key: key,
         value: val
-      }; 
+      };
 
       if (options.startkey && Pouch.collate(key, options.startkey) < 0) return;
       if (options.endkey && Pouch.collate(key, options.endkey) > 0) return;
@@ -7350,18 +7352,19 @@ app = function(dashboard_db_url, options) {
             }
             if (info.remote_dashboard.available) {
 
-                store_session(info.remote_dashboard.session, function(err, rest){
-                    if (!info.pouched_dashboard.synced) {
-                        return self.setMachineState(self.FIRST_VISIT);
-                    }
-                    else {
-                        if (is_session_logged_in(info.remote_dashboard.session)) {
+                if (!info.pouched_dashboard.synced) {
+                    return self.setMachineState(self.FIRST_VISIT);
+                }
+                else {
+
+                    get_stored_session(function(err, session){
+                        if (is_session_logged_in(session)) {
                             return self.setMachineState(self.ONLINE_WITH_USER);
-                        } else {
-                            return self.setMachineState(self.ONLINE_WITHOUT_USER);
                         }
-                    }
-                });
+                        return self.setMachineState(self.ONLINE_WITHOUT_USER);
+                    });
+                }
+
 
             }
             if (!info.remote_dashboard.available && info.pouched_dashboard.synced) {
@@ -7427,12 +7430,8 @@ app = function(dashboard_db_url, options) {
             };
             if (err) return callback(null, results);
 
-            get_remote_session(function(err, session){
-                if (err) return callback(null, results);
-                results.available = true;
-                results.session = session;
-                callback(null, results);
-            });
+            results.available = true;
+            callback(null, results);
         });
     };
 
@@ -7483,14 +7482,22 @@ app = function(dashboard_db_url, options) {
 
 
     var t_first_sync = function() {
+        var self = this;
+        console.log('first sync');
         sync(function(err){
-            if (err) return core.states.setMachineState(core.states.READY_LOCAL_DB_UNSUPPORTED);
-            core.states.setMachineState(core.states.READY_HAVE_LOCAL_DB_ONLINE);
+            if (err) return self.setMachineState(self.READY_LOCAL_DB_UNSUPPORTED);
+
+            get_stored_session(function(err, session){
+                if (err || !session) self.setMachineState(self.ONLINE_WITHOUT_USER);
+                if (is_session_logged_in(session))  return self.setMachineState(self.ONLINE_WITH_USER);
+                return self.setMachineState(self.ONLINE_WITHOUT_USER);
+            });
+
         });
     };
 
     var sync = function(callback) {
-        Pouch.replicate(this.remote_db, this.local_db, {}, callback);
+        Pouch.replicate(core.remote_db, core.local_db, {}, callback);
     };
 
 
@@ -7740,6 +7747,8 @@ app.prototype.init = function(callback) {
 
     menu.dashboard_core.start(function(err, state) {
 
+        console.log(state);
+
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
 
@@ -7748,6 +7757,14 @@ app.prototype.init = function(callback) {
             menu.settings = _.defaults(settingsDoc, default_settings);
             results.settings = menu.settings;
             callback(null, results);
+
+
+            // sneaky sync
+            if (state === 'FIRST_VISIT') {
+                console.log('sneeky sync');
+                menu.dashboard_core.sync(function(err){});
+            }
+
         });
     });
 };
@@ -7995,15 +8012,25 @@ var app = function(dashboard_db_url) {
 };
 
 
-
+function t(start_t, msg) {
+    var now = new Date().getTime();
+    console.log(now - start_t, msg);
+}
 
 app.prototype.init = function(callback) {
     var widget = this;
 
+    var time_s = new Date().getTime();
+    t(time_s, "menu init start");
     widget.garden_menu.init(function(err, results){
+        t(time_s, "menu init ended");
         widget.garden_menu.getAppLinks(function(err, links){
+            t(time_s, "get links ended");
             if (err) return callback(err);
-            widget.loadTopbar(links, callback);
+            widget.loadTopbar(links, function(err){
+                t(time_s, "t bar loaded");
+                callback(err);
+            });
         });
     });
 };
@@ -8112,6 +8139,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar').data('ready', true);
     $('#dashboard-topbar').trigger('ready');
+    callback(null);
 };
 
 

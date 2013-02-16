@@ -5,9 +5,10 @@
         define(['url', 'garden-menu', 'jscss', './garden-menu-widget.css.js', 'modernizer', 'sync-status-icon', 'svg'],factory);
     } else {
         root.garden_menu_widget = factory(
-            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.Modernizr, root.svg, root.SyncIcon, root.JST["templates/topbar.underscore"]);
+            root.url, root.garden_menu, root.jscss, root.garden_menu_widget_css, root.Modernizr, root.svg,
+            root.SyncIcon, root.JST["templates/topbar.underscore"], root.JST["templates/profile.underscore"]);
     }
-}(this, function (url, GardenMenu, jscss, css, Modernizr, svg, SyncIcon, topbar_t) {
+}(this, function (url, GardenMenu, jscss, css, Modernizr, svg, SyncIcon, topbar_t, profile_t) {
 
 
 var app = function(dashboard_db_url) {
@@ -41,12 +42,9 @@ var app = function(dashboard_db_url) {
 };
 
 
-function t(start_t, msg) {
-    var now = new Date().getTime();
-}
-
 app.prototype.init = function(callback) {
     var widget = this;
+    widget.last_state = null;
     widget.garden_menu.init(function(err, results){
 
 
@@ -55,6 +53,13 @@ app.prototype.init = function(callback) {
 
             if (err) return callback(err);
             widget.loadTopbar(links, function(err){
+
+                widget.cachedLinks = links;
+                widget.core.getCachedSession(function(err, session){
+                    widget.last_user = session.userCtx.name;
+                    widget.showSession(session);
+                });
+
                 widget.poll_interval = setInterval(function() { widget.poll(); }, 5000);
                 callback(err);
             });
@@ -70,13 +75,16 @@ app.prototype.poll = function() {
 app.prototype.loadTopbar = function(data, callback) {
     var me = this;
 
+    // check for other styles
+    jscss.embed(jscss.compile(css));
+
+
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
         $topbar = $('<div id="dashboard-topbar"></div>');
         $('body').prepend($topbar);
     }
-    // check for other styles
-    jscss.embed(jscss.compile(css));
+
 
     $topbar.html(topbar_t(data));
     var path = window.location.pathname;
@@ -178,23 +186,49 @@ app.prototype.loadTopbar = function(data, callback) {
         state: mapCoreStatesToDisplay(me.core.getState())
     });
 
+
+
     me.core.bind(function(event, old_state, new_state) {
-        console.log(new_state);
+        // filter some chaff
+        if (me.last_state === new_state) return;
+
+        // show the sync state
         var display_state = mapCoreStatesToDisplay(new_state);
-        return me.sync_icon[display_state]();
+        me.sync_icon[display_state]();
+
+        me.core.getCachedSession(function(err, session){
+            if (session.userCtx.name === me.last_user) return;
+            me.showSession(session);
+            me.last_user = session.userCtx.name;
+        });
+
+
+        me.last_state = new_state;
     });
 
 
     me.sync_icon.click(function(){
         var state = me.core.getState();
         if (state === 'FIRST_VISIT') {
-            me.sync_icon.online();
+            me.sync_icon.syncing();
             me.core.sync();
         }
     });
 
     callback(null);
 };
+
+
+app.prototype.showSession = function(session) {
+
+
+    session.is_user = (session.userCtx.name || false);
+
+    session.displayName = session.userCtx.name;
+    session.login_url = this.cachedLinks.login_url;
+    $('#dashboard-profile').html(profile_t(session));
+};
+
 
 
 function mapCoreStatesToDisplay(core_state) {

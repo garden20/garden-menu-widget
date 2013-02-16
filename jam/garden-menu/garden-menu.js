@@ -32,7 +32,6 @@ app.prototype.init = function(callback) {
 
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
-        console.log(results);
         callback(null, results);
     });
 };
@@ -49,14 +48,16 @@ app.prototype.getAppLinks = function(options, callback) {
 
 
         menu.settings = _.defaults(results.settingsDoc, default_settings);
-        var settings = results.settingsDoc,
-            dashboard_url = menu.dashboard_ui_url(),
-            home_url = dashboard_url,
-            settings_url  = dashboard_url + "settings";
+        var settings = results.settingsDoc;
+
+        results.dashboard_url = menu.dashboard_ui_url(),
+        results.home_url = results.dashboard_url,
+        results.settings_url  = results.dashboard_url + "settings";
+        results.login_url = menu.login_url(results.dashboard_url);
 
 
         if (settings.frontpage.use_link) {
-            home_url = settings.frontpage.link_url;
+            results.home_url = settings.frontpage.link_url;
         }
 
         results.apps = _.map(results.apps, function(app) {
@@ -79,7 +80,14 @@ app.prototype.getAppLinks = function(options, callback) {
 };
 
 
+app.prototype.login_url = function(dashboard_url) {
+    var login_url = dashboard_url + 'login';
 
+    if (this.settings.sessions.type == 'other') {
+        login_url = this.settings.sessions.other.login_url;
+    }
+    return login_url;
+};
 
 app.prototype.dashboard_ui_url = function() {
 

@@ -1,10 +1,10 @@
 CACHE MANIFEST
 
-#version 31
+#version 52
 
 CACHE:
 
-dist/topbar.js
+dist/topbar.min.js
 
 NETWORK:
 *

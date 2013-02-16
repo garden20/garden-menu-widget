@@ -43,7 +43,7 @@ module.exports = function(grunt) {
     jst: {
       compile: {
         files: {
-          "dist/templates.js": "templates/topbar.underscore"
+          "dist/templates.js": ["templates/*.underscore"]
         }
       }
     },

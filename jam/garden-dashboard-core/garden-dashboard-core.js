@@ -13,6 +13,7 @@ var app = function(dashboard_db_url, options) {
     core.dashboard_db_url = dashboard_db_url;
     core.options = options;
     core.pouchName = app.getPouchName(dashboard_db_url);
+    core.determine_state_cached_session = null;
 
     /*------   Private Methods ------------------*/
     // any methods that start with t_ transition the state machine
@@ -152,7 +153,6 @@ var app = function(dashboard_db_url, options) {
 
 
     var get_remote_session = function(callback) {
-        console.log('get remote sesstion');
         core.remote_db.request({
             url: '../_session'
         }, callback);
@@ -168,10 +168,17 @@ var app = function(dashboard_db_url, options) {
     var store_session = function(session, callback) {
         if (!session) session = {userCtx: null};
         get_stored_session(function(err, stored_session){
+            var update = true;
             if (err || !stored_session) stored_session = session;
-            else stored_session.userCtx = session.userCtx;
+            else {
+                if (stored_session.userCtx.name === session.userCtx.name) {
+                    update = false;
+                }
+                stored_session.userCtx = session.userCtx;
+            }
             stored_session._id = 'session';
-            core.extra_db.put(stored_session, callback);
+            if (update) core.extra_db.put(stored_session, callback);
+            else callback(null, stored_session);
         });
 
     };
@@ -195,6 +202,7 @@ var app = function(dashboard_db_url, options) {
             if (err) return callback(null, results);
             get_remote_session(function(err2, session){
                 if (err2) return callback(null, results);
+                core.determine_state_cached_session = session;
                 results.session = session;
                 results.available = true;
                 callback(null, results);
@@ -238,11 +246,9 @@ var app = function(dashboard_db_url, options) {
 
 
     var t_poll_connectivity = function() {
-        console.log('poll contectivity');
         var self = this;
 
         get_remote_session(function(err, session){
-            console.log('no error');
             if (err) {
                 // offline
                 get_stored_session(function(err, session){
@@ -427,6 +433,16 @@ app.prototype.bind = function(func) {
     this.states.bind(func);
 };
 
+app.prototype.getCachedSession = function(callback) {
+    var core = this;
+    this.extra_db.get('session', function(err, session){
+        if (err && err.status === 404) {
+            // a special condition for the first time
+            return callback(null, core.determine_state_cached_session);
+        }
+        return callback(err, session);
+    });
+};
 
 app.getPouchName = function(dashboard_db_url) {
 

@@ -42,14 +42,6 @@
     'font-weight': 'normal'
 },
 
-':#dashboard-topbar .appname': {
-    'font-weight': 'bold',
-    'color': 'white',
-    'margin': '0 50px',
-    'border-left': '1px solid #666',
-    'padding': '7px 10px',
-    'float': 'left'
-},
 
 '#dashboard-topbar ul': {
     'margin': '0',
@@ -87,7 +79,9 @@
     'cursor': 'pointer',
     'display': 'inline-block',
     'padding': '0 3px',
-    'border-left': '1px solid #999'
+    'border-left': '1px solid #404040;',
+    'width': '21px',
+    'height': '21px'
 },
 
 '#dashboard-topbar-offline-icon svg' : {
@@ -99,7 +93,7 @@
 '#dashboard-profile': {
     'display': 'inline-block',
     'padding': '0 10px',
-    'border-left': '1px solid #999',
+    'border-left': '1px solid #404040;',
     'position': 'relative',
     'top': '-1px'
 },
@@ -118,10 +112,25 @@
     'font-size': '13px',
     'font-weight': 'normal',
     'line-height': '18px',
+    'color': '#BFBFBF'
+},
+
+
+'#dashboard-topbar #dashboard-topbar-session  a.login': {
+    'display': 'block',
+    'padding': '2px 10px 2px 10px',
     'color': 'white'
+},
+
+'#dashboard-topbar #dashboard-topbar-session  a.login:hover': {
+    'color': '#ccc',
+    'text-decoration': 'none'
+},
+
+'#dashboard-topbar #dashboard-topbar-session.active  a.login': {
+    'color': '#ccc',
+    'text-decoration': 'none'
 }
-
-
 
 
 };  }));

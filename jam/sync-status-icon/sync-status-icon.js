@@ -114,6 +114,9 @@ var icon = function(element, options) {
         if (me.options.state === 'disabled' && to_state ==='offline') {
             return rotate_on(offline_state);
         }
+        if (me.options.state ==='disabled'  && to_state === 'syncing') {
+            return rotate_on(syncing_state);
+        }
         if (me.options.state === 'online' && to_state ==='disabled') {
             return rotate_off(disabled_state);
         }

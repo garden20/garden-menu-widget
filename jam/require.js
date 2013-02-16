@@ -2093,10 +2093,6 @@ var jam = {
             "main": "modernizr-development.js"
         },
         {
-            "name": "modernizr",
-            "location": "jam/modernizr"
-        },
-        {
             "name": "pouchdb",
             "location": "jam/pouchdb",
             "main": "dist/pouchdb.amd-nightly.js"
@@ -2115,6 +2111,16 @@ var jam = {
             "name": "stately",
             "location": "jam/stately",
             "main": "Stately.js"
+        },
+        {
+            "name": "svg",
+            "location": "jam/svg",
+            "main": "dist/svg.js"
+        },
+        {
+            "name": "sync-status-icon",
+            "location": "jam/sync-status-icon",
+            "main": "sync-status-icon.js"
         },
         {
             "name": "underscore",

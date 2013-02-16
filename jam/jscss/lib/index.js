@@ -6,7 +6,7 @@
     } else {
         root.jscss = factory();
     }
-}(this, function (url, GardenMenu, jscss, css, topbar_t) {
+}(this, function () {
 
   var
     id = 0

@@ -1,6 +1,20 @@
-<% _.each(grouped_apps.apps, function(app) { %>
+<div class="topbar-right">
+    <div id="dashboard-topbar-offline-icon"></div>
+    <div id="dashboard-profile">
+        <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">
+        <h4>{{username}}</h4>
+    </div>
+</div>
+<div class="topbar-middle">
 
-<a href="<%= app.link %>">
-<%= app.title %>
-</a>
-<% }) %>
+    <ul class="kanso-nav">
+
+        <% _.each(grouped_apps.apps, function(app) { %>
+        <li>
+            <a href="<%= app.link %>"><%= app.title %></a>
+        </li>
+        <% }) %>
+    </ul>
+
+
+</div>

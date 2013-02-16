@@ -32,8 +32,8 @@ app.prototype.init = function(callback) {
 
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
-
-        callback(null, state);
+        console.log(results);
+        callback(null, results);
     });
 };
 

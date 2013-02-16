@@ -8,8 +8,7 @@
     }
 }(this, function (async, Pouch, garden_views, url, Stately) {
 
-var app = {};
-app = function(dashboard_db_url, options) {
+var app = function(dashboard_db_url, options) {
     var core = this;
     core.dashboard_db_url = dashboard_db_url;
     core.options = options;
@@ -153,6 +152,7 @@ app = function(dashboard_db_url, options) {
 
 
     var get_remote_session = function(callback) {
+        console.log('get remote sesstion');
         core.remote_db.request({
             url: '../_session'
         }, callback);
@@ -193,9 +193,13 @@ app = function(dashboard_db_url, options) {
                 session: null
             };
             if (err) return callback(null, results);
+            get_remote_session(function(err2, session){
+                if (err2) return callback(null, results);
+                results.session = session;
+                results.available = true;
+                callback(null, results);
+            });
 
-            results.available = true;
-            callback(null, results);
         });
 
     };
@@ -233,21 +237,25 @@ app = function(dashboard_db_url, options) {
     };
 
 
-    var t_poll_connectivity = function(callback) {
+    var t_poll_connectivity = function() {
+        console.log('poll contectivity');
+        var self = this;
+
         get_remote_session(function(err, session){
-
-            store_session(session, function(err2) {
-
-            });
-
-
+            console.log('no error');
             if (err) {
-                // swallow errors
-                // need to get logged in or not
-                core.session = null;
-                return this.setMachineState(core.states);
+                // offline
+                get_stored_session(function(err, session){
+                    if (is_session_logged_in(session)) return self.setMachineState(self.OFFLINE_WITH_USER);
+                    else return self.setMachineState(self.OFFLINE_WITHOUT_USER);
+                });
+            } else {
+                // online
+                store_session(session, function(err2) {
+                    if (is_session_logged_in(session)) return self.setMachineState(self.ONLINE_WITH_USER);
+                    else return self.setMachineState(self.ONLINE_WITHOUT_USER);
+                });
             }
-            extra_db.put({ _id: 'userCtx', 'userCtx': userCtx });
         });
     };
 
@@ -391,8 +399,8 @@ app.prototype.settings = function(callback) {
     this.states.settings(callback);
 };
 
-app.prototype.poll = function(callback) {
-    this.states.poll(callback);
+app.prototype.poll = function() {
+    this.states.poll();
 };
 
 app.prototype.login = function(user, password, callback) {
@@ -409,6 +417,14 @@ app.prototype.go_online = function() {
 
 app.prototype.go_offline = function() {
     this.states.offline();
+};
+
+app.prototype.getState = function() {
+    return this.states.getMachineState();
+};
+
+app.prototype.bind = function(func) {
+    this.states.bind(func);
 };
 
 

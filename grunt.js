@@ -6,6 +6,8 @@ var srcFiles = [
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
   "jam/stately/Stately.js",
+  "jam/svg/dist/svg.js",
+  "jam/sync-status-icon/sync-status-icon.js",
   "lib/bowser.js",
   "lib/pouchdb-nightly.js",
   "lib/Modernizer.custom.js",

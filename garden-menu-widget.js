@@ -210,14 +210,6 @@ app.prototype.showSession = function(session) {
 
     session.login_url = session.login_url + "?redirect=" + encodeURIComponent(window.location);
 
-    // if (data.settingsDoc.sessions.type === 'internal') {
-    //     full_login = login_base +  "/" + encodeURIComponent(window.location);
-    // }
-    // if (data.settingsDoc.sessions.type === 'other') {
-    //     //full_login =
-    // }
-
-
     $('#dashboard-profile').html(profile_t(session));
 };
 

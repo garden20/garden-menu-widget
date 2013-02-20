@@ -297,7 +297,7 @@ var app = function(dashboard_db_url, options) {
     };
 
     var sync = function(callback) {
-        Pouch.replicate(core.remote_db, core.local_db, {}, callback);
+        Pouch.replicate(core.remote_db, core.local_db, { filter: 'dashboard/docs_only' }, callback);
     };
 
 

@@ -92,42 +92,44 @@
 
 '#dashboard-profile': {
     'display': 'inline-block',
-    'padding': '0 10px',
+    'padding': '0',
     'border-left': '1px solid #404040;',
     'position': 'relative',
-    'top': '-1px'
+    'top': '-3px'
 },
 
 '#dashboard-profile img': {
     'position': 'relative',
-    'top': '2px'
+    'top': '4px',
+    'padding-left': '10px'
 },
 
 '#dashboard-profile h4': {
     'display': 'inline-block',
     'margin': '0',
     'position': 'relative',
-    'top': '-3px',
+    'top': '-1px',
     'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
     'font-size': '13px',
     'font-weight': 'normal',
     'line-height': '18px',
-    'color': '#BFBFBF'
+    'color': '#BFBFBF',
+    'padding-right': '10px'
 },
 
 
-'#dashboard-topbar #dashboard-topbar-session  a.login': {
+'#dashboard-topbar   a.login': {
     'display': 'block',
     'padding': '2px 10px 2px 10px',
     'color': 'white'
 },
 
-'#dashboard-topbar #dashboard-topbar-session  a.login:hover': {
+'#dashboard-topbar  a.login:hover': {
     'color': '#ccc',
     'text-decoration': 'none'
 },
 
-'#dashboard-topbar #dashboard-topbar-session.active  a.login': {
+'#dashboard-topbar  a.login': {
     'color': '#ccc',
     'text-decoration': 'none'
 }

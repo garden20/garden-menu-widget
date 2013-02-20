@@ -4,5 +4,6 @@ var root_url = window.location,
 
 ui = new garden_menu_widget(db);
 ui.init(function(err){
-    console.log('init', err);
+    //console.log('init', err);
 });
+$.noConflict(true);

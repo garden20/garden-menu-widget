@@ -13,7 +13,7 @@ var app = function(dashboard_db_url, options) {
     core.dashboard_db_url = dashboard_db_url;
     core.options = options;
     core.pouchName = app.getPouchName(dashboard_db_url);
-    core.determine_state_cached_session = null;
+    core.cached_session = null;
 
     /*------   Private Methods ------------------*/
     // any methods that start with t_ transition the state machine
@@ -26,6 +26,7 @@ var app = function(dashboard_db_url, options) {
             },
             "FIRST_VISIT" : {
                 // couch available, pouch supported, never synced
+                poll: t_poll_connectivity_no_pouch,
                 sync: t_first_sync,
                 topbar: topbar_remote,
                 allAssets: allAssets_remote,
@@ -36,6 +37,7 @@ var app = function(dashboard_db_url, options) {
             },
             "READY_LOCAL_DB_UNSUPPORTED": {
                 // couch available, pouch not supported
+                poll: t_poll_connectivity_no_pouch,
                 topbar: topbar_remote,
                 allAssets: allAssets_remote,
                 settings: settings_remote
@@ -177,7 +179,10 @@ var app = function(dashboard_db_url, options) {
                 stored_session.userCtx = session.userCtx;
             }
             stored_session._id = 'session';
-            if (update) core.extra_db.put(stored_session, callback);
+            if (update) {
+                core.extra_db.put(stored_session, callback);
+                core.cached_session = stored_session;
+            }
             else callback(null, stored_session);
         });
 
@@ -202,7 +207,7 @@ var app = function(dashboard_db_url, options) {
             if (err) return callback(null, results);
             get_remote_session(function(err2, session){
                 if (err2) return callback(null, results);
-                core.determine_state_cached_session = session;
+                core.cached_session = session;
                 results.session = session;
                 results.available = true;
                 callback(null, results);
@@ -262,6 +267,17 @@ var app = function(dashboard_db_url, options) {
                     else return self.setMachineState(self.ONLINE_WITHOUT_USER);
                 });
             }
+        });
+    };
+
+    var t_poll_connectivity_no_pouch = function() {
+        var self = this;
+        get_remote_session(function(err, session){
+            if (err) return;
+            core.cached_session = session;
+            //trigger an update
+            var state = self.getMachineState();
+            self.setMachineState(self[state]);
         });
     };
 
@@ -435,10 +451,14 @@ app.prototype.bind = function(func) {
 
 app.prototype.getCachedSession = function(callback) {
     var core = this;
+    if (core.cached_session) {
+        return callback(null, core.cached_session);
+    }
+
     this.extra_db.get('session', function(err, session){
         if (err && err.status === 404) {
             // a special condition for the first time
-            return callback(null, core.determine_state_cached_session);
+            return callback(null, core.cached_session);
         }
         return callback(err, session);
     });

@@ -29,7 +29,6 @@ app.prototype.init = function(callback) {
     };
 
     menu.dashboard_core.start(function(err, state) {
-
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
         callback(null, results);

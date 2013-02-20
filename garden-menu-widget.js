@@ -154,30 +154,6 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar .logout').click(logout);
 
-    var login_base = $('#dashboard-topbar .login').attr('href');
-    var full_login = login_base + "?redirect=" + encodeURIComponent(window.location);
-
-    var sessionType = $('#dashboard-topbar-session').data('sessiontype');
-    if (sessionType == 'other') {
-        full_login = login_base +  "/" + encodeURIComponent(window.location);
-    }
-
-    $('#dashboard-topbar .login').attr('href', full_login);
-
-    try {
-        var userCtx = JSON.parse(decodeURI( $('#dashboard-topbar-session').data('userctx') ));
-        var session = require('session');
-        session.emit('change', userCtx);
-    } catch(ignore){}
-
-    // if we are on the login, set the class to active
-    var fullPath = path + window.location.hash;
-    if (fullPath.indexOf(login_base) === 0) {
-        $('#dashboard-topbar-session').addClass('active');
-        // add active to any ul
-        $('#dashboard-topbar-session').find('ul li:first').addClass('active');
-    }
-
     $('#dashboard-topbar').data('ready', true);
     $('#dashboard-topbar').trigger('ready');
 
@@ -190,11 +166,16 @@ app.prototype.loadTopbar = function(data, callback) {
 
     me.core.bind(function(event, old_state, new_state) {
         // filter some chaff
-        if (me.last_state === new_state) return;
+        if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
+
 
         // show the sync state
         var display_state = mapCoreStatesToDisplay(new_state);
-        me.sync_icon[display_state]();
+        if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
+            // not sure... for now do nothing...
+        } else {
+            me.sync_icon[display_state]();
+        }
 
         me.core.getCachedSession(function(err, session){
             if (session.userCtx.name === me.last_user) return;
@@ -226,6 +207,17 @@ app.prototype.showSession = function(session) {
 
     session.displayName = session.userCtx.name;
     session.login_url = this.cachedLinks.login_url;
+
+    session.login_url = session.login_url + "?redirect=" + encodeURIComponent(window.location);
+
+    // if (data.settingsDoc.sessions.type === 'internal') {
+    //     full_login = login_base +  "/" + encodeURIComponent(window.location);
+    // }
+    // if (data.settingsDoc.sessions.type === 'other') {
+    //     //full_login =
+    // }
+
+
     $('#dashboard-profile').html(profile_t(session));
 };
 

@@ -2098,6 +2098,11 @@ var jam = {
             "main": "dist/pouchdb.amd-nightly.js"
         },
         {
+            "name": "qTip2",
+            "location": "jam/qTip2",
+            "main": "dist/jquery.qtip.js"
+        },
+        {
             "name": "querystring",
             "location": "jam/querystring",
             "main": "querystring.js"

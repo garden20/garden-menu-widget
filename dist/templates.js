@@ -25,7 +25,19 @@ __p+='<div class="topbar-right">\n    <div id="dashboard-topbar-offline-icon"></
  _.each(grouped_apps.apps, function(app) { 
 ;__p+='\n        <li>\n            <a href="'+
 ( app.link )+
-'">'+
+'"\n\n            ';
+ if (app.db) {  
+;__p+='\n                data-db="'+
+(app.db)+
+'"\n            ';
+ } 
+;__p+='\n\n            ';
+ if (app.desc) {  
+;__p+='\n                title="'+
+(app.desc)+
+'"\n            ';
+ } 
+;__p+='\n\n            >'+
 ( app.title )+
 '</a>\n        </li>\n        ';
  }) 

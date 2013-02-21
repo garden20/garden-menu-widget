@@ -67,6 +67,10 @@ app.prototype.getAppLinks = function(options, callback) {
                 app.remote_user_warning = true;
                 app.remote_user = app.doc.remote_user;
             }
+            if (app.doc.kanso || app.doc.couchapp) {
+                var meta = app.doc.couchapp || app.doc.kanso;
+                app.desc = meta.config.description;
+            }
             return app;
         });
 

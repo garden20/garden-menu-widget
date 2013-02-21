@@ -72,7 +72,8 @@
 
 '#dashboard-topbar ul>li.active>a.active' : {
     'border-top': '2px solid #95B774 !important',
-    'color': '#FFF'
+    'color': '#FFF',
+    'padding-top': '1px !important'
 },
 
 '#dashboard-topbar-offline-icon' : {

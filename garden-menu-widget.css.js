@@ -2,26 +2,34 @@
     if (typeof exports === 'object') {
         module.exports = factory();
     } else if (typeof define === 'function' && define.amd) {
-        define([],factory);
+        define(['bowser'],factory);
     } else {
-        root.garden_menu_widget_css = factory();
+        root.garden_menu_widget_css = factory(root.bowser);
     }
-}(this, function () { return {
+}(this, function (bowser) {
+
+function getTopbarBackground(from, to) {
+    // also check version
+    if (bowser.webkit) return '-webkit-linear-gradient('+from+','+to+')';
+    if (bowser.opera ) return '-o-linear-gradient('+from+','+to+')';
+    if (bowser.mozilla) return '-moz-linear-gradient('+from+','+to+')';
+    return 'linear-gradient('+from+','+to+')';
+}
 
 
-
+return {
 '#dashboard-topbar' : {
 
     'font-weight': 'normal',
-    'line-height': '18px',
+
     'color': '#404040',
     'height': '25px',
     'width': '100%',
-    'background-color': '#1D1D1D',
-    'position': "relative",
-    'font-family': "ProximaNovaRgRegular, 'Helvetica Neue', helvetica, arial, sans-serif",
-    'font-size': '14px'
-
+    'background': getTopbarBackground('#4a4c4d', '#2b2d2d'),
+    'background-color': '#2b2d2d',
+    'font-family': "titillium, ProximaNovaRgRegular, 'Helvetica Neue', helvetica, arial, sans-serif",
+    'overflow': 'hidden',
+    'z-index': '100'
 },
 
 
@@ -62,7 +70,10 @@
     'padding': '3px 10px 2px 10px',
     'color': '#BFBFBF',
     'font-weight': 'bold',
-    'text-transform': 'capitalize'
+    'font-size': '14px',
+    'line-height': '18px',
+    'text-transform': 'capitalize',
+    'text-shadow': '1px 1px 1px #111'
 },
 
 '#dashboard-topbar ul>li>a:hover': {
@@ -71,69 +82,79 @@
 },
 
 '#dashboard-topbar ul>li.active>a.active' : {
-    'border-top': '2px solid #95B774 !important',
+    'border-top': '2px solid #1d1d1d !important',
     'color': '#FFF',
     'padding-top': '1px !important'
 },
 
 '#dashboard-topbar-offline-icon' : {
     'cursor': 'pointer',
-    'display': 'inline-block',
     'padding': '0 3px',
-    'border-left': '1px solid #404040;',
-    'width': '21px',
-    'height': '21px'
+
+    'width': '25px',
+    'height': '25px',
+    'float': 'left'
+},
+
+'#dashboard-topbar-offline-icon:hover' : {
+    'background-color': '#4d4d4d'
 },
 
 '#dashboard-topbar-offline-icon svg' : {
-    'position': 'relative',
-    'top': '2px',
-    'left': '2px'
+    'margin-top': '2px'
+    // 'position': 'relative',
+    // 'top': '2px',
+    // 'left': '2px'
 },
 
 '#dashboard-profile': {
     'display': 'inline-block',
     'padding': '0',
-    'border-left': '1px solid #404040;',
-    'position': 'relative',
-    'top': '-3px'
+    'cursor': 'pointer',
+    //'position': 'relative',
+    'height': '25px',
+    'float': 'right'
+},
+
+
+'#dashboard-profile:hover' : {
+    'background-color': '#4d4d4d'
 },
 
 '#dashboard-profile img': {
-    'position': 'relative',
-    'top': '4px',
-    'padding-left': '10px'
+    //'position': 'relative',
+    'margin-top': '2px',
+    'padding-left': '10px',
+    'float': 'left'
 },
 
 '#dashboard-profile h4': {
     'display': 'inline-block',
     'margin': '0',
-    'position': 'relative',
-    'top': '-1px',
+    //'position': 'relative',
     'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
     'font-size': '13px',
     'font-weight': 'normal',
     'line-height': '18px',
     'color': '#BFBFBF',
-    'padding-right': '10px'
+    'padding': '3px 10px 0 6px'
 },
 
 
 '#dashboard-topbar   a.login': {
     'display': 'block',
     'padding': '2px 10px 2px 10px',
-    'color': 'white'
+    'color': '#ccc',
+    'text-decoration': 'none',
+    'height': '25px'
 },
 
 '#dashboard-topbar  a.login:hover': {
-    'color': '#ccc',
-    'text-decoration': 'none'
-},
-
-'#dashboard-topbar  a.login': {
-    'color': '#ccc',
+    'color': 'white',
     'text-decoration': 'none'
 }
 
 
-};  }));
+};  // end of return block
+
+}));

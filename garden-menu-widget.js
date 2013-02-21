@@ -2,16 +2,18 @@
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js', './dist/css.js','modernizer', 'sync-status-icon', 'svg'],factory);
+        define(['jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js',
+            './dist/css.js','modernizer', 'bowser', 'svg', 'sync-status-icon' ],factory);
     } else {
         root.garden_menu_widget = factory(
             root.jQuery,
             root.url, root.garden_menu, root.jscss,
             root.garden_menu_widget_css, root.garden_menu_widget_extra_css,
-            root.Modernizr, root.svg,
+            root.Modernizr, root.bowser,
+            root.svg,
             root.SyncIcon, root.JST["templates/topbar.underscore"], root.JST["templates/profile.underscore"]);
     }
-}(this, function ($, url, GardenMenu, jscss, css, extra_css, Modernizr, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
 var app = function(dashboard_db_url) {
@@ -63,7 +65,7 @@ app.prototype.init = function(callback) {
                     widget.showSession(session);
                 });
 
-                widget.poll_interval = setInterval(function() { widget.poll(); }, 5000);
+                widget.poll_interval = setInterval(function() { widget.poll(); }, 10000);
                 callback(err);
             });
         });
@@ -127,7 +129,7 @@ app.prototype.loadTopbar = function(data, callback) {
                      },
                      error  : function(err, b, c) {
                         pass = false;
-                        app.log('Access Denied.');
+                        app.log('Access Denied.', {center:true});
                      }
 
                  });
@@ -204,6 +206,7 @@ app.prototype.loadTopbar = function(data, callback) {
             delay: 2000
         },
         position: {
+            my: 'top center',
             at: 'bottom center'
         },
         style: {
@@ -326,9 +329,17 @@ function checkLogoutDestination() {
 
 
 // stuff for notifications
-app.log = function(msg) {
+app.log = function(msg, options) {
+    if (!options) options = {};
     // Use the last visible jGrowl qtip as our positioning target
-    var target = $('.qtip.cluetip:visible:last');
+    var target = $('.qtip.cluetip:visible:last'),
+        my = 'top right',
+        at = (target.length ? 'bottom' : 'top') + ' right';
+
+    if (options.center) {
+        my = 'center center';
+        at = 'center center';
+    }
 
     // Create your jGrowl qTip...
     $(document.body).qtip({
@@ -337,9 +348,9 @@ app.log = function(msg) {
             text: msg
         },
         position: {
-            my: 'top right',
+            my: my,
             // Not really important...
-            at: (target.length ? 'bottom' : 'top') + ' right',
+            at: at,
             // If target is window use 'top right' instead of 'bottom right'
             target: target.length ? target : $(window),
             // Use our target declared above
@@ -382,7 +393,7 @@ app.log = function(msg) {
             }
         },
         style: {
-            classes: 'cluetip qtip-cluetip',
+            classes: 'cluetip qtip-tipsy',
             // Some nice visual classes
             tip: false // No tips for this one (optional ofcourse)
         },

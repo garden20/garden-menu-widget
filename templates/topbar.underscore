@@ -1,6 +1,6 @@
 <div class="topbar-right">
-    <div id="dashboard-topbar-offline-icon"></div>
     <div id="dashboard-profile"></div>
+    <div id="dashboard-topbar-offline-icon"></div>
 </div>
 <div class="topbar-middle">
 

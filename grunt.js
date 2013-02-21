@@ -20,7 +20,7 @@ var srcFiles = [
   "jam/garden-menu/garden-menu.js",
 
   "jam/jscss/lib/index.js",
-  "jam/jquery/jquery-1.9.1.min.js",
+  "jam/jquery/jquery.js",
   "jam/qTip2/dist/jquery.qtip.js",
   "dist/templates.js",
   "dist/css.js",

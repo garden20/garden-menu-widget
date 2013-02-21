@@ -99,6 +99,43 @@ app.prototype.loadTopbar = function(data, callback) {
     var login = $topbar.find('#dashboard-topbar-session a').attr('href');
     if (login == path)  $topbar.find('#dashboard-topbar-session').addClass('active');
 
+    /**
+     *  does a head check to the db. before allowing the link to pass.
+     * This double checks the user can login to the link.
+     * THis is to prevent the dreaded json error.
+     * @param link
+     */
+    var addNotLoggedInHack = function(link) {
+        var db = link.data('db');
+        if (db) {
+
+            // only if online check the head
+            $(link).bind('click', function(){
+                var state = me.core.getState();
+                if (state.indexOf('OFFLINE') === 0) return true;
+
+               $(this).removeClass('hover');
+                var pass;
+                $.ajax({
+                    url : '/dashboard/_design/dashboard/_rewrite/_couch/' + db,
+                     type: 'HEAD',
+                     dataType: 'json',
+                     cache: "false",
+                     async: false,
+                     success: function(data, a){
+                        pass = true;
+                     },
+                     error  : function(err, b, c) {
+                        pass = false;
+                        app.log('Access Denied.');
+                     }
+
+                 });
+                return pass;
+
+            });
+        }
+    };
 
     $('#dashboard-topbar ul.kanso-nav li').each(function(i) {
         var link = $(this).find('a');
@@ -160,20 +197,29 @@ app.prototype.loadTopbar = function(data, callback) {
     $('#dashboard-topbar').data('ready', true);
     $('#dashboard-topbar').trigger('ready');
 
-    me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
-        size: 21,
-        state: mapCoreStatesToDisplay(me.core.getState())
-    });
 
+    // Add a desciption tip
     $('#dashboard-topbar a[title]').qtip({
         show: {
             delay: 2000
         },
         position: {
             at: 'bottom center'
+        },
+        style: {
+            classes: 'qtip-tipsy qtip-shadow'
         }
     });
 
+
+    // add a sync icon
+    me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
+        size: 21,
+        state: mapCoreStatesToDisplay(me.core.getState())
+    });
+
+
+    // bind state changes.
     me.core.bind(function(event, old_state, new_state) {
         // filter some chaff
         if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
@@ -192,12 +238,10 @@ app.prototype.loadTopbar = function(data, callback) {
             me.showSession(session);
             me.last_user = session.userCtx.name;
         });
-
-
         me.last_state = new_state;
     });
 
-
+    // on click on sync icon
     me.sync_icon.click(function(){
         var state = me.core.getState();
         if (state === 'FIRST_VISIT') {
@@ -237,6 +281,9 @@ function mapCoreStatesToDisplay(core_state) {
 
 
 function logout() {
+    // only if online
+
+
     $.ajax({
         url : '/dashboard/_design/dashboard/_rewrite/_couch/_session',
         type: 'DELETE',
@@ -274,38 +321,100 @@ function checkLogoutDestination() {
     return pass;
 }
 
-/**
- *  does a head check to the db. before allowing the link to pass.
- * This double checks the user can login to the link.
- * THis is to prevent the dreaded json error.
- * @param link
- */
-function addNotLoggedInHack(link) {
-    var db = link.data('db');
-    if (db) {
-        $(link).bind('click', function(){
-           $(this).removeClass('hover');
-            var pass;
-            $.ajax({
-                url : '/dashboard/_design/dashboard/_rewrite/_couch/' + db,
-                 type: 'HEAD',
-                 dataType: 'json',
-                 async: false,
-                 success: function(data){
-                        pass = true;
-                 },
-                 error  : function() {
-                    pass = false;
-                    console.log('Access Denied');
-                    //humane.error('Access Denied.');
-                 }
 
-             });
-            return pass;
 
-        });
+
+
+// stuff for notifications
+app.log = function(msg) {
+    // Use the last visible jGrowl qtip as our positioning target
+    var target = $('.qtip.cluetip:visible:last');
+
+    // Create your jGrowl qTip...
+    $(document.body).qtip({
+        // Any content config you want here really.... go wild!
+        content: {
+            text: msg
+        },
+        position: {
+            my: 'top right',
+            // Not really important...
+            at: (target.length ? 'bottom' : 'top') + ' right',
+            // If target is window use 'top right' instead of 'bottom right'
+            target: target.length ? target : $(window),
+            // Use our target declared above
+            adjust: { y: (target.length ? 8 : 30), x: (target.length ? 0 : -5)  },
+            effect: function(api, newPos) {
+                // Animate as usual if the window element is the target
+                $(this).animate(newPos, {
+                    duration: 400,
+                    queue: false
+                });
+
+                // Store the final animate position
+                api.cache.finalPos = newPos;
+            }
+        },
+        show: {
+            event: false,
+            // Don't show it on a regular event
+            ready: true,
+            // Show it when ready (rendered)
+            effect: function() {
+                $(this).stop(0, 1).fadeIn(600);
+            },
+            // Matches the hide effect
+            delay: 0,
+            // Needed to prevent positioning issues
+            // Custom option for use with the .get()/.set() API, awesome!
+            persistent: false
+        },
+        hide: {
+            event: false,
+            // Don't hide it on a regular event
+            effect: function(api) {
+                // Do a regular fadeOut, but add some spice!
+                $(this).stop(0, 1).fadeOut(400).queue(function() {
+                    // Destroy this tooltip after fading out
+                    api.destroy();
+
+                });
+            }
+        },
+        style: {
+            classes: 'cluetip qtip-cluetip',
+            // Some nice visual classes
+            tip: false // No tips for this one (optional ofcourse)
+        },
+        events: {
+            render: function(event, api) {
+                // Trigger the timer (below) on render
+                timer.call(api.elements.tooltip, event);
+            }
+        }
+    }).removeData('qtip');
+};
+
+// Setup our timer function
+function timer(event) {
+    var api = $(this).data('qtip'),
+        lifespan = 3000; // 3s second lifespan
+
+    // If persistent is set to true, don't do anything.
+    if (api.get('show.persistent') === true) { return; }
+
+    // Otherwise, start/clear the timer depending on event type
+    clearTimeout(api.timer);
+    if (event.type !== 'mouseover') {
+        api.timer = setTimeout(api.hide, lifespan);
     }
 }
+
+// Utilise delegate so we don't have to rebind for every qTip!
+$(document).delegate('.qtip.cluetip', 'mouseover mouseout', timer);
+
+
+
 
 
 return app;

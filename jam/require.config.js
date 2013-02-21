@@ -33,7 +33,7 @@ var jam = {
         {
             "name": "jquery",
             "location": "jam/jquery",
-            "main": "jquery-1.9.1.min.js"
+            "main": "jquery.js"
         },
         {
             "name": "jscss",

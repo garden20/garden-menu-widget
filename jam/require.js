@@ -2053,6 +2053,11 @@ var jam = {
             "main": "./bowser.js"
         },
         {
+            "name": "events",
+            "location": "jam/events",
+            "main": "events.js"
+        },
+        {
             "name": "garden-dashboard-core",
             "location": "jam/garden-dashboard-core",
             "main": "garden-dashboard-core.js"

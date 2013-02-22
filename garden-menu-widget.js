@@ -3,6 +3,7 @@
         define([
             'jquery',
             'underscore',
+            'events',
             'url',
             'garden-menu',
             'jscss',
@@ -17,6 +18,7 @@
         root.garden_menu_widget = factory(
             root.jQuery,
             root._,
+            root.events,
             root.url,
             root.garden_menu,
             root.jscss,
@@ -30,7 +32,7 @@
             root.JST["templates/profile.underscore"]
         );
     }
-}(this, function ($, _, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, events, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
 var app = function(dashboard_db_url, options) {
@@ -66,6 +68,7 @@ var app = function(dashboard_db_url, options) {
     }
 
     this.options = _.extend(defaults, options);
+    this.emitter = new events.EventEmitter();
     this.garden_menu = new GardenMenu(dashboard_db_url, this.options);
 };
 
@@ -102,6 +105,20 @@ app.prototype.init = function(callback) {
 app.prototype.poll = function() {
     this.core.poll();
 };
+
+// emitter things..
+app.prototype.on = function(event, listener) {
+    this.emitter.on(event, listener);
+};
+
+app.prototype.once = function(event, listener) {
+    this.emitter.once(event, listener);
+};
+
+app.prototype.removeListener = function(event, listener) {
+    this.emitter.removeListener(event, listener);
+};
+
 
 app.prototype.loadTopbar = function(data, callback) {
     var me = this;
@@ -283,7 +300,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     if (callback) callback(null);
     $topbar.data('ready', true);
-    $(document).trigger('dashboard-ready');
+    this.emitter.emit('dashboard-ready');
     console.log('triggered');
 };
 

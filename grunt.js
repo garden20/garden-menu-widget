@@ -16,6 +16,7 @@ var bundle_js = [
   "lib/url.js",
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
+  "jam/events/events.js",
   "jam/stately/Stately.js",
   "jam/svg/dist/svg.js",
   "jam/sync-status-icon/sync-status-icon.js",

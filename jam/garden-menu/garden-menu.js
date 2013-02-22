@@ -44,7 +44,7 @@ app.prototype.getAppLinks = function(options, callback) {
     }
 
     menu.dashboard_core.topbar(function(err, results) {
-
+        if (err) return callback(err);
 
         menu.settings = _.defaults(results.settingsDoc, default_settings);
         var settings = results.settingsDoc;

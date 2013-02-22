@@ -336,6 +336,8 @@ var app = function(dashboard_db_url, options) {
             apps: [],
             scripts: []
         };
+        if (err && err.status === 404 && err.reason === 'no_db_file') return topbar_empty(results, callback);
+        if (err) return callback(err);
         async.forEach(resp.rows, function(row, cb){
             if (row.key[0] === 0) results.settingsDoc = row.value;
             if (row.key[0] === 1) {
@@ -361,6 +363,11 @@ var app = function(dashboard_db_url, options) {
         }, function(err){
             callback(err, results);
         });
+    };
+
+    var topbar_empty = function(results, callback) {
+        results.no_db_file = true;
+        callback(null, results);
     };
 
     var allAssets_local = function(callback) {

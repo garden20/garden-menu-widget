@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+   - 0.8
+
+
+services:
+  - couchdb
+
+before_script:
+  - npm install grunt -g
+  - npm install
+
+script: "grunt amd test"
+
+
+notifications:
+  email:
+    - ryan.ramage@gmail.com

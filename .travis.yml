@@ -7,7 +7,7 @@ services:
   - couchdb
 
 before_script:
-  - npm install grunt -g
+  - npm install grunt@0.3.17 -g
   - npm install
 
 script: "grunt amd test"

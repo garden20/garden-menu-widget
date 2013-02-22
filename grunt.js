@@ -32,7 +32,7 @@ var bundle_js = [
   "jam/jquery/jquery.js",
   "jam/qTip2/dist/jquery.qtip.js",
   "temp/templates.js",
-  "dist/css.js",
+  "dist/compiled_css.js",
   "src/garden-menu-widget.css.js",
   "garden-menu-widget.js",
   "src/topbar.js"

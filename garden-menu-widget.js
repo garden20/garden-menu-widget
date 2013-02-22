@@ -300,8 +300,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     if (callback) callback(null);
     $topbar.data('ready', true);
-    this.emitter.emit('dashboard-ready');
-    console.log('triggered');
+    this.emitter.emit('loaded');
 };
 
 

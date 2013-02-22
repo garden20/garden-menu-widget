@@ -4,8 +4,8 @@ asyncTest( "Load Topbar", function() {
 
     ok(window.garden_ui, 'Global garden_ui varabile is set');
 
-    garden_ui.on('dashboard-ready', function(){
-        ok(true, 'Dashboard emits ready event');
+    garden_ui.on('loaded', function(){
+        ok(true, 'Menu loaded');
         start();
     });
 });

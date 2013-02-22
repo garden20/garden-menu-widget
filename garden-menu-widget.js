@@ -1,18 +1,34 @@
 (function (root, factory) {
-    if (typeof exports === 'object') {
-        module.exports = factory(require('url'), require('garden-menu'));
-    } else if (typeof define === 'function' && define.amd) {
-        define(['underscore' ,'jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js',
-            './dist/css.js','modernizer', 'bowser', 'svg', 'sync-status-icon' ],factory);
+    if (typeof define === 'function' && define.amd) {
+        define([
+            'jquery',
+            'underscore',
+            'url',
+            'garden-menu',
+            'jscss',
+            './src/garden-menu-widget.css.js',
+            './dist/compiled_css.js',
+            'modernizer',
+            'bowser',
+            'svg',
+            'sync-status-icon'
+        ],factory);
     } else {
         root.garden_menu_widget = factory(
             root.jQuery,
             root._,
-            root.url, root.garden_menu, root.jscss,
-            root.garden_menu_widget_css, root.garden_menu_widget_extra_css,
-            root.Modernizr, root.bowser,
+            root.url,
+            root.garden_menu,
+            root.jscss,
+            root.garden_menu_widget_css,
+            root.garden_menu_widget_extra_css,
+            root.Modernizr,
+            root.bowser,
             root.svg,
-            root.SyncIcon, root.JST["templates/topbar.underscore"], root.JST["templates/profile.underscore"]);
+            root.SyncIcon,
+            root.JST["templates/topbar.underscore"],
+            root.JST["templates/profile.underscore"]
+        );
     }
 }(this, function ($, _, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
@@ -206,8 +222,6 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar .logout').click(logout);
 
-    $('#dashboard-topbar').data('ready', true);
-    $('#dashboard-topbar').trigger('ready');
 
 
     // Add a desciption tip
@@ -267,7 +281,10 @@ app.prototype.loadTopbar = function(data, callback) {
         $('dashboard-topbar-offline-icon').hide();
     }
 
-    callback(null);
+    if (callback) callback(null);
+    $topbar.data('ready', true);
+    $(document).trigger('dashboard-ready');
+    console.log('triggered');
 };
 
 

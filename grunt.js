@@ -3,8 +3,16 @@ var css2json = require('css2json'),
   path = require('path');
 
 
+var main_src = [
+  "garden-menu-widget.js",
+  "src/garden-menu-widget.css.js",
+  "src/topbar.js"
+];
+
+var template_dirs = ["templates/*.underscore"];
+
 /* ORDER HERE is _Very_ Important */
-var srcFiles = [
+var bundle_js = [
   "lib/url.js",
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
@@ -22,16 +30,29 @@ var srcFiles = [
   "jam/jscss/lib/index.js",
   "jam/jquery/jquery.js",
   "jam/qTip2/dist/jquery.qtip.js",
-  "dist/templates.js",
+  "temp/templates.js",
   "dist/css.js",
-  "garden-menu-widget.css.js",
+  "src/garden-menu-widget.css.js",
   "garden-menu-widget.js",
-  "topbar.js"
+  "src/topbar.js"
 ];
 
 var extraCss = [
   "jam/qTip2/dist/jquery.qtip.css"
 ];
+
+var dist_topbar = "dist/topbar.js";
+var dist_topbar_min = "dist/topbar.min.js";
+
+var couch_config = {
+  test: {
+            db: 'http://localhost:5984/garden_menu_widget',
+            app: './test/basic_couchapp/app.js',
+            options: {
+              okay_if_missing: true
+            }
+          }
+};
 
 
 module.exports = function(grunt) {
@@ -51,12 +72,12 @@ module.exports = function(grunt) {
       }
     },
     lint: {
-      all: ['garden-menu-widget.js']
+      all: main_src
     },
     jst: {
       compile: {
         files: {
-          "dist/templates.js": ["templates/*.underscore"]
+          "temp/templates.js": template_dirs
         }
       }
     },
@@ -64,26 +85,42 @@ module.exports = function(grunt) {
     concat: {
       css: {
         src: grunt.utils._.flatten([
-          "<banner:meta.css.top>", "dist/css.json", "<banner:meta.css.bottom>"
+          "<banner:meta.css.top>", "temp/css.json", "<banner:meta.css.bottom>"
         ]),
-        dest: 'dist/css.js'
+        dest: 'dist/compiled_css.js'
       },
       all: {
         src: grunt.utils._.flatten([
-          "<banner>","<banner:meta.inline.top>", srcFiles, "<banner:meta.inline.bottom>"
+          "<banner>","<banner:meta.inline.top>", bundle_js, "<banner:meta.inline.bottom>"
         ]),
-        dest: 'dist/topbar.js'
+        dest: dist_topbar
       }
     },
     min: {
       dist: {
-        src: "./dist/topbar.js",
-        dest: 'dist/topbar.min.js'
+        src: dist_topbar,
+        dest: dist_topbar_min
       }
+    },
+    jam: {
+        dist: {
+          src: ['garden-menu-widget.js'],
+          dest: 'dist/garden-menu-widget.amd.min.js'
+        }
+      },
+    couchapp: couch_config,
+    mkcouchdb: couch_config,
+    rmcouchdb: couch_config,
+    qunit: {
+      all: ['http://localhost:5984/garden_menu_widget/_design/gmw/index.html']
     }
   });
 
+  grunt.loadNpmTasks('grunt-jam');
   grunt.loadNpmTasks('grunt-contrib-jst');
+  // Load the couchapp task
+  grunt.loadNpmTasks('grunt-couchapp');
+
   grunt.registerTask('css2json', 'My "asyncfoo" task.', function() {
     // Force task into async mode and grab a handle to the "done" function.
     var done = this.async();
@@ -97,13 +134,22 @@ module.exports = function(grunt) {
       cb();
     }, function(){
       grunt.config.set('extraCss', full_css);
-      fs.writeFileSync('dist/css.json', 'return ' +  JSON.stringify(full_css) + ';');
+      try { fs.mkdirSync('temp'); } catch(ignore){}
+      fs.writeFileSync('temp/css.json', 'return ' +  JSON.stringify(full_css) + ';');
       done();
     });
   });
 
 
+
   // Default task.
-  grunt.registerTask('default', 'jst css2json concat min');
+  grunt.registerTask('default', 'css2json jst concat min');
+
+  // jam build.
+  grunt.registerTask('amd', 'css2json jst concat min jam');
+
+  // test
+  grunt.registerTask('test', 'rmcouchdb:test mkcouchdb:test couchapp:test qunit');
+
 
 };

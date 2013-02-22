@@ -17,7 +17,7 @@ function getTopbarBackground(from, to) {
 }
 
 
-return {
+var css =  {
 '#dashboard-topbar' : {
 
     'font-weight': 'normal',
@@ -155,6 +155,13 @@ return {
 }
 
 
-};  // end of return block
+};  // end of css block
+
+
+return function(options) {
+    if (options.position) css['#dashboard-topbar'].position = options.position;
+    return css;
+};
+
 
 }));

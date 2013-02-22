@@ -11,7 +11,7 @@ __p+='';
  } else { 
 ;__p+='\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <h4>'+
 ( displayName )+
-'</h4>\n\n';
+'</h4>\n';
  } 
 ;__p+='';
 }
@@ -21,7 +21,7 @@ return __p;
 this["JST"]["templates/topbar.underscore"] = function(obj){
 var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};
 with(obj||{}){
-__p+='<div class="topbar-right">\n    <div id="dashboard-topbar-offline-icon"></div>\n    <div id="dashboard-profile"></div>\n</div>\n<div class="topbar-middle">\n\n    <ul class="kanso-nav">\n\n        ';
+__p+='<div class="topbar-right">\n    <div id="dashboard-profile"></div>\n    <div id="dashboard-topbar-offline-icon"></div>\n</div>\n<div class="topbar-middle">\n\n    <ul class="kanso-nav">\n\n        ';
  _.each(grouped_apps.apps, function(app) { 
 ;__p+='\n        <li>\n            <a href="'+
 ( app.link )+

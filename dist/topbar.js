@@ -4423,7 +4423,7 @@ return icon;
     } else {
         root.bowser = factory();
     }
-}(this, function (async, Pouch, garden_views, url, Stately) {
+}(this, function () {
   /**
     * navigator.userAgent =>
     * Chrome:  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.57 Safari/534.24"
@@ -13625,7 +13625,7 @@ __p+='';
  } else { 
 ;__p+='\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <h4>'+
 ( displayName )+
-'</h4>\n\n';
+'</h4>\n';
  } 
 ;__p+='';
 }
@@ -13635,7 +13635,7 @@ return __p;
 this["JST"]["templates/topbar.underscore"] = function(obj){
 var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};
 with(obj||{}){
-__p+='<div class="topbar-right">\n    <div id="dashboard-topbar-offline-icon"></div>\n    <div id="dashboard-profile"></div>\n</div>\n<div class="topbar-middle">\n\n    <ul class="kanso-nav">\n\n        ';
+__p+='<div class="topbar-right">\n    <div id="dashboard-profile"></div>\n    <div id="dashboard-topbar-offline-icon"></div>\n</div>\n<div class="topbar-middle">\n\n    <ul class="kanso-nav">\n\n        ';
  _.each(grouped_apps.apps, function(app) { 
 ;__p+='\n        <li>\n            <a href="'+
 ( app.link )+
@@ -13668,26 +13668,34 @@ return {".qtip":{"position":"absolute","left":"-28000px","top":"-28000px","displ
     if (typeof exports === 'object') {
         module.exports = factory();
     } else if (typeof define === 'function' && define.amd) {
-        define([],factory);
+        define(['bowser'],factory);
     } else {
-        root.garden_menu_widget_css = factory();
+        root.garden_menu_widget_css = factory(root.bowser);
     }
-}(this, function () { return {
+}(this, function (bowser) {
+
+function getTopbarBackground(from, to) {
+    // also check version
+    if (bowser.webkit) return '-webkit-linear-gradient('+from+','+to+')';
+    if (bowser.opera ) return '-o-linear-gradient('+from+','+to+')';
+    if (bowser.mozilla) return '-moz-linear-gradient('+from+','+to+')';
+    return 'linear-gradient('+from+','+to+')';
+}
 
 
-
+var css =  {
 '#dashboard-topbar' : {
 
     'font-weight': 'normal',
-    'line-height': '18px',
+
     'color': '#404040',
     'height': '25px',
     'width': '100%',
-    'background-color': '#1D1D1D',
-    'position': "relative",
-    'font-family': "ProximaNovaRgRegular, 'Helvetica Neue', helvetica, arial, sans-serif",
-    'font-size': '14px'
-
+    'background': getTopbarBackground('#4a4c4d', '#2b2d2d'),
+    'background-color': '#2b2d2d',
+    'font-family': "titillium, ProximaNovaRgRegular, 'Helvetica Neue', helvetica, arial, sans-serif",
+    'overflow': 'hidden',
+    'z-index': '100'
 },
 
 
@@ -13728,7 +13736,10 @@ return {".qtip":{"position":"absolute","left":"-28000px","top":"-28000px","displ
     'padding': '3px 10px 2px 10px',
     'color': '#BFBFBF',
     'font-weight': 'bold',
-    'text-transform': 'capitalize'
+    'font-size': '14px',
+    'line-height': '18px',
+    'text-transform': 'capitalize',
+    'text-shadow': '1px 1px 1px #111'
 },
 
 '#dashboard-topbar ul>li>a:hover': {
@@ -13737,116 +13748,142 @@ return {".qtip":{"position":"absolute","left":"-28000px","top":"-28000px","displ
 },
 
 '#dashboard-topbar ul>li.active>a.active' : {
-    'border-top': '2px solid #95B774 !important',
+    'border-top': '2px solid #1d1d1d !important',
     'color': '#FFF',
     'padding-top': '1px !important'
 },
 
 '#dashboard-topbar-offline-icon' : {
     'cursor': 'pointer',
-    'display': 'inline-block',
     'padding': '0 3px',
-    'border-left': '1px solid #404040;',
-    'width': '21px',
-    'height': '21px'
+
+    'width': '25px',
+    'height': '25px',
+    'float': 'left'
+},
+
+'#dashboard-topbar-offline-icon:hover' : {
+    'background-color': '#4d4d4d'
 },
 
 '#dashboard-topbar-offline-icon svg' : {
-    'position': 'relative',
-    'top': '2px',
-    'left': '2px'
+    'margin-top': '2px'
+    // 'position': 'relative',
+    // 'top': '2px',
+    // 'left': '2px'
 },
 
 '#dashboard-profile': {
     'display': 'inline-block',
     'padding': '0',
-    'border-left': '1px solid #404040;',
-    'position': 'relative',
-    'top': '-3px'
+    'cursor': 'pointer',
+    //'position': 'relative',
+    'height': '25px',
+    'float': 'right'
+},
+
+
+'#dashboard-profile:hover' : {
+    'background-color': '#4d4d4d'
 },
 
 '#dashboard-profile img': {
-    'position': 'relative',
-    'top': '4px',
-    'padding-left': '10px'
+    //'position': 'relative',
+    'margin-top': '2px',
+    'padding-left': '10px',
+    'float': 'left'
 },
 
 '#dashboard-profile h4': {
     'display': 'inline-block',
     'margin': '0',
-    'position': 'relative',
-    'top': '-1px',
+    //'position': 'relative',
     'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
     'font-size': '13px',
     'font-weight': 'normal',
     'line-height': '18px',
     'color': '#BFBFBF',
-    'padding-right': '10px'
+    'padding': '3px 10px 0 6px'
 },
 
 
 '#dashboard-topbar   a.login': {
     'display': 'block',
     'padding': '2px 10px 2px 10px',
-    'color': 'white'
+    'color': '#ccc',
+    'text-decoration': 'none',
+    'height': '25px'
 },
 
 '#dashboard-topbar  a.login:hover': {
-    'color': '#ccc',
-    'text-decoration': 'none'
-},
-
-'#dashboard-topbar  a.login': {
-    'color': '#ccc',
+    'color': 'white',
     'text-decoration': 'none'
 }
 
 
-};  }));
+};  // end of css block
+
+
+return function(options) {
+    if (options.position) css['#dashboard-topbar'].position = options.position;
+    return css;
+};
+
+
+}));
 (function (root, factory) {
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js', './dist/css.js','modernizer', 'sync-status-icon', 'svg'],factory);
+        define(['underscore' ,'jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js',
+            './dist/css.js','modernizer', 'bowser', 'svg', 'sync-status-icon' ],factory);
     } else {
         root.garden_menu_widget = factory(
             root.jQuery,
+            root._,
             root.url, root.garden_menu, root.jscss,
             root.garden_menu_widget_css, root.garden_menu_widget_extra_css,
-            root.Modernizr, root.svg,
+            root.Modernizr, root.bowser,
+            root.svg,
             root.SyncIcon, root.JST["templates/topbar.underscore"], root.JST["templates/profile.underscore"]);
     }
-}(this, function ($, url, GardenMenu, jscss, css, extra_css, Modernizr, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
-var app = function(dashboard_db_url) {
+var app = function(dashboard_db_url, options) {
+    if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
 
-    var options = {
-        disablePouch: true
+    var defaults = {
+        disablePouch: true,
+        showSession: true,
+        divSelector: 'body',
+        position: 'relative'
     };
-    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
-        options.disablePouch = false;
-    }
 
+    // adjust defaults for pouch based on env
+    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
+        defaults.disablePouch = false;
+    }
     // also check version
     if (bowser.firefox && bowser.version < 12) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.opera && bowser.version < 12) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.chrome && bowser.version < 19) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.safari && bowser.version <= 5) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.iphone && bowser.version <= 5) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
 
-    this.garden_menu = new GardenMenu(dashboard_db_url, options);
+    this.options = _.extend(defaults, options);
+    this.garden_menu = new GardenMenu(dashboard_db_url, this.options);
 };
 
 
@@ -13862,13 +13899,16 @@ app.prototype.init = function(callback) {
             if (err) return callback(err);
             widget.loadTopbar(links, function(err){
 
-                widget.cachedLinks = links;
-                widget.core.getCachedSession(function(err, session){
-                    widget.last_user = session.userCtx.name;
-                    widget.showSession(session);
-                });
+                if (widget.options.showSession) {
+                    widget.cachedLinks = links;
+                    widget.core.getCachedSession(function(err, session){
+                        widget.last_user = session.userCtx.name;
+                        widget.showSession(session);
+                    });
 
-                widget.poll_interval = setInterval(function() { widget.poll(); }, 5000);
+                    widget.poll_interval = setInterval(function() { widget.poll(); }, 10000);
+                }
+
                 callback(err);
             });
         });
@@ -13884,13 +13924,13 @@ app.prototype.loadTopbar = function(data, callback) {
     var me = this;
 
     // check for other styles
-    jscss.embed(jscss.compile(css));
+    jscss.embed(jscss.compile(css(me.options)));
     jscss.embed(jscss.compile(extra_css));
 
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
         $topbar = $('<div id="dashboard-topbar"></div>');
-        $('body').prepend($topbar);
+        $(me.options.divSelector).prepend($topbar);
     }
 
 
@@ -13932,7 +13972,7 @@ app.prototype.loadTopbar = function(data, callback) {
                      },
                      error  : function(err, b, c) {
                         pass = false;
-                        app.log('Access Denied.');
+                        app.log('Access Denied.', {center:true});
                      }
 
                  });
@@ -14009,6 +14049,7 @@ app.prototype.loadTopbar = function(data, callback) {
             delay: 2000
         },
         position: {
+            my: 'top center',
             at: 'bottom center'
         },
         style: {
@@ -14017,43 +14058,47 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    // add a sync icon
-    me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
-        size: 21,
-        state: mapCoreStatesToDisplay(me.core.getState())
-    });
-
-
-    // bind state changes.
-    me.core.bind(function(event, old_state, new_state) {
-        // filter some chaff
-        if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
-
-
-        // show the sync state
-        var display_state = mapCoreStatesToDisplay(new_state);
-        if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
-            // not sure... for now do nothing...
-        } else {
-            me.sync_icon[display_state]();
-        }
-
-        me.core.getCachedSession(function(err, session){
-            if (session.userCtx.name === me.last_user) return;
-            me.showSession(session);
-            me.last_user = session.userCtx.name;
+    if (!me.options.disablePouch) {
+        // add a sync icon
+        me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
+            size: 21,
+            state: mapCoreStatesToDisplay(me.core.getState())
         });
-        me.last_state = new_state;
-    });
 
-    // on click on sync icon
-    me.sync_icon.click(function(){
-        var state = me.core.getState();
-        if (state === 'FIRST_VISIT') {
-            me.sync_icon.syncing();
-            me.core.sync();
-        }
-    });
+
+        // bind state changes.
+        me.core.bind(function(event, old_state, new_state) {
+            // filter some chaff
+            if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
+
+
+            // show the sync state
+            var display_state = mapCoreStatesToDisplay(new_state);
+            if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
+                // not sure... for now do nothing...
+            } else {
+                me.sync_icon[display_state]();
+            }
+
+            me.core.getCachedSession(function(err, session){
+                if (session.userCtx.name === me.last_user) return;
+                me.showSession(session);
+                me.last_user = session.userCtx.name;
+            });
+            me.last_state = new_state;
+        });
+
+        // on click on sync icon
+        me.sync_icon.click(function(){
+            var state = me.core.getState();
+            if (state === 'FIRST_VISIT') {
+                me.sync_icon.syncing();
+                me.core.sync();
+            }
+        });
+    } else {
+        $('dashboard-topbar-offline-icon').hide();
+    }
 
     callback(null);
 };
@@ -14131,9 +14176,17 @@ function checkLogoutDestination() {
 
 
 // stuff for notifications
-app.log = function(msg) {
+app.log = function(msg, options) {
+    if (!options) options = {};
     // Use the last visible jGrowl qtip as our positioning target
-    var target = $('.qtip.cluetip:visible:last');
+    var target = $('.qtip.cluetip:visible:last'),
+        my = 'top right',
+        at = (target.length ? 'bottom' : 'top') + ' right';
+
+    if (options.center) {
+        my = 'center center';
+        at = 'center center';
+    }
 
     // Create your jGrowl qTip...
     $(document.body).qtip({
@@ -14142,9 +14195,9 @@ app.log = function(msg) {
             text: msg
         },
         position: {
-            my: 'top right',
+            my: my,
             // Not really important...
-            at: (target.length ? 'bottom' : 'top') + ' right',
+            at: at,
             // If target is window use 'top right' instead of 'bottom right'
             target: target.length ? target : $(window),
             // Use our target declared above
@@ -14187,7 +14240,7 @@ app.log = function(msg) {
             }
         },
         style: {
-            classes: 'cluetip qtip-cluetip',
+            classes: 'cluetip qtip-tipsy',
             // Some nice visual classes
             tip: false // No tips for this one (optional ofcourse)
         },
@@ -14226,15 +14279,67 @@ return app;
 
 }));
 var root_url = window.location,
-    db = url.resolve(root_url, '/dashboard');
+    db = url.resolve(root_url, '/dashboard'),
+    // the hardcoded, pre agreed location of this script.
+    baseJavascript = "/dashboard/_design/dashboard/_rewrite/static/js/topbar.js";
 
 
-ui = new garden_menu_widget(db);
+var queryOptions = findScriptParams();
+
+
+ui = new garden_menu_widget(db, queryOptions);
+
 ui.init(function(err){
     //console.log('init', err);
 });
 $.noConflict(true);
 
 
+
+// get querystring params from this
+function findScriptParams() {
+    var links = $('script');
+    var results = {};
+    $.each(links, function(i, script){
+        var src = $(script).attr('src');
+        if (src && src.indexOf(baseJavascript) === 0) {
+            var param =  src.split('?')[1];
+            console.log(param);
+            if (param) {
+                results = parseQueryString(param);
+            }
+        }
+    });
+    return results;
+}
+
+
+function parseQueryString(str){
+  if ('string' != typeof str) return {};
+  str = trim(str);
+  if ('' === str) return {};
+  return reduce(str.split('&'), function(obj, pair){
+    var parts = pair.split('=');
+    obj[parts[0]] = null === parts[1] ? '' : decodeURIComponent(parts[1]);
+    return obj;
+  }, {});
+}
+
+function trim(str){
+  return str.replace(/^\s*|\s*$/g, '');
+}
+
+function reduce(arr, fn, initial){
+  var idx = 0;
+  var len = arr.length;
+  var curr = arguments.length == 3 ? initial
+    : arr[idx++];
+
+  while (idx < len) {
+    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+  }
+
+  return curr;
+}
 
 if (mlt==='r') {exports=ml;} if (mlt==='a'){define=ml;} })() 

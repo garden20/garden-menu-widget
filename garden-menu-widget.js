@@ -2,48 +2,55 @@
     if (typeof exports === 'object') {
         module.exports = factory(require('url'), require('garden-menu'));
     } else if (typeof define === 'function' && define.amd) {
-        define(['jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js',
+        define(['underscore' ,'jquery', 'url', 'garden-menu', 'jscss', './garden-menu-widget.css.js',
             './dist/css.js','modernizer', 'bowser', 'svg', 'sync-status-icon' ],factory);
     } else {
         root.garden_menu_widget = factory(
             root.jQuery,
+            root._,
             root.url, root.garden_menu, root.jscss,
             root.garden_menu_widget_css, root.garden_menu_widget_extra_css,
             root.Modernizr, root.bowser,
             root.svg,
             root.SyncIcon, root.JST["templates/topbar.underscore"], root.JST["templates/profile.underscore"]);
     }
-}(this, function ($, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
-var app = function(dashboard_db_url) {
+var app = function(dashboard_db_url, options) {
+    if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
 
-    var options = {
-        disablePouch: true
+    var defaults = {
+        disablePouch: true,
+        showSession: true,
+        divSelector: 'body',
+        position: 'relative'
     };
-    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
-        options.disablePouch = false;
-    }
 
+    // adjust defaults for pouch based on env
+    if (Modernizr.indexeddb || Modernizr.websqldatabase) {
+        defaults.disablePouch = false;
+    }
     // also check version
     if (bowser.firefox && bowser.version < 12) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.opera && bowser.version < 12) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.chrome && bowser.version < 19) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.safari && bowser.version <= 5) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
     if (bowser.iphone && bowser.version <= 5) {
-        options.disablePouch= true;
+        defaults.disablePouch= true;
     }
 
-    this.garden_menu = new GardenMenu(dashboard_db_url, options);
+    this.options = _.extend(defaults, options);
+    this.garden_menu = new GardenMenu(dashboard_db_url, this.options);
 };
 
 
@@ -59,13 +66,16 @@ app.prototype.init = function(callback) {
             if (err) return callback(err);
             widget.loadTopbar(links, function(err){
 
-                widget.cachedLinks = links;
-                widget.core.getCachedSession(function(err, session){
-                    widget.last_user = session.userCtx.name;
-                    widget.showSession(session);
-                });
+                if (widget.options.showSession) {
+                    widget.cachedLinks = links;
+                    widget.core.getCachedSession(function(err, session){
+                        widget.last_user = session.userCtx.name;
+                        widget.showSession(session);
+                    });
 
-                widget.poll_interval = setInterval(function() { widget.poll(); }, 10000);
+                    widget.poll_interval = setInterval(function() { widget.poll(); }, 10000);
+                }
+
                 callback(err);
             });
         });
@@ -81,13 +91,13 @@ app.prototype.loadTopbar = function(data, callback) {
     var me = this;
 
     // check for other styles
-    jscss.embed(jscss.compile(css));
+    jscss.embed(jscss.compile(css(me.options)));
     jscss.embed(jscss.compile(extra_css));
 
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
         $topbar = $('<div id="dashboard-topbar"></div>');
-        $('body').prepend($topbar);
+        $(me.options.divSelector).prepend($topbar);
     }
 
 
@@ -215,43 +225,47 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    // add a sync icon
-    me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
-        size: 21,
-        state: mapCoreStatesToDisplay(me.core.getState())
-    });
-
-
-    // bind state changes.
-    me.core.bind(function(event, old_state, new_state) {
-        // filter some chaff
-        if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
-
-
-        // show the sync state
-        var display_state = mapCoreStatesToDisplay(new_state);
-        if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
-            // not sure... for now do nothing...
-        } else {
-            me.sync_icon[display_state]();
-        }
-
-        me.core.getCachedSession(function(err, session){
-            if (session.userCtx.name === me.last_user) return;
-            me.showSession(session);
-            me.last_user = session.userCtx.name;
+    if (!me.options.disablePouch) {
+        // add a sync icon
+        me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
+            size: 21,
+            state: mapCoreStatesToDisplay(me.core.getState())
         });
-        me.last_state = new_state;
-    });
 
-    // on click on sync icon
-    me.sync_icon.click(function(){
-        var state = me.core.getState();
-        if (state === 'FIRST_VISIT') {
-            me.sync_icon.syncing();
-            me.core.sync();
-        }
-    });
+
+        // bind state changes.
+        me.core.bind(function(event, old_state, new_state) {
+            // filter some chaff
+            if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
+
+
+            // show the sync state
+            var display_state = mapCoreStatesToDisplay(new_state);
+            if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
+                // not sure... for now do nothing...
+            } else {
+                me.sync_icon[display_state]();
+            }
+
+            me.core.getCachedSession(function(err, session){
+                if (session.userCtx.name === me.last_user) return;
+                me.showSession(session);
+                me.last_user = session.userCtx.name;
+            });
+            me.last_state = new_state;
+        });
+
+        // on click on sync icon
+        me.sync_icon.click(function(){
+            var state = me.core.getState();
+            if (state === 'FIRST_VISIT') {
+                me.sync_icon.syncing();
+                me.core.sync();
+            }
+        });
+    } else {
+        $('dashboard-topbar-offline-icon').hide();
+    }
 
     callback(null);
 };

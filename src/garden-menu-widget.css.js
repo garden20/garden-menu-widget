@@ -32,17 +32,19 @@ var css =  {
     'z-index': '100'
 },
 
-
-
-'#dashboard-topbar .topbar-middle' : {
+'#dashboard-topbar .topbar-container': {
     'width' : '940px',
     'margin-left': 'auto',
     'margin-right': 'auto'
 },
 
-'#dashboard-topbar .topbar-right' : {
-    'float': 'right'
+'#dashboard-topbar .topbar-middle' : {
+    'float': 'left'
+},
 
+'#dashboard-topbar .topbar-right' : {
+    'float': 'right',
+    'margin-right': '6px'
 },
 
 '#dashboard-topbar a': {
@@ -67,7 +69,7 @@ var css =  {
 
 '#dashboard-topbar ul>li>a': {
     'display': 'block',
-    'padding': '3px 10px 2px 10px',
+    'padding': '3px 10px 2px 0',
     'color': '#BFBFBF',
     'font-weight': 'bold',
     'font-size': '14px',
@@ -101,7 +103,8 @@ var css =  {
 },
 
 '#dashboard-topbar-offline-icon svg' : {
-    'margin-top': '2px'
+    'margin-top': '2px',
+    'shape-rendering': 'auto'
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
@@ -146,7 +149,8 @@ var css =  {
     'padding': '2px 10px 2px 10px',
     'color': '#ccc',
     'text-decoration': 'none',
-    'height': '25px'
+    'height': '25px',
+    'font-size': '14px'
 },
 
 '#dashboard-topbar  a.login:hover': {
@@ -159,7 +163,12 @@ var css =  {
 
 
 return function(options) {
-    if (options.position) css['#dashboard-topbar'].position = options.position;
+    if (options.position) {
+        css['#dashboard-topbar'].position = options.position;
+    }
+    if (options.position === 'fixed') {
+        css['#dashboard-topbar'].top = "0";
+    }
     return css;
 };
 

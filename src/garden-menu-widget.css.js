@@ -25,7 +25,10 @@ var css =  {
     'color': '#222222',
     'font-family': '"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif',
     'font-weight': 'normal',
-    'font-style': 'normal'
+    'font-style': 'normal',
+    'font-size': '16px',
+    '-webkit-font-smoothing': 'antialiased',
+    'text-shadow': 'none'
 },
 
 
@@ -40,7 +43,8 @@ var css =  {
 },
 
 '#dashboard-topbar a' : {
-  'text-decoration': 'none'
+  'text-decoration': 'none',
+  'text-shadow': 'none'
 },
 '#dashboard-topbar a img': {
     'border': 'none'

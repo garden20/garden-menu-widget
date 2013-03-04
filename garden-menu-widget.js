@@ -140,6 +140,8 @@ app.prototype.loadTopbar = function(data, callback) {
     $topbar.addClass('dashboard-topbar');
 
     $topbar.html(topbar_t(data));
+
+    $(document).foundation();
     var path = window.location.pathname;
 
     // highlight the best thing

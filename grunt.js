@@ -31,6 +31,8 @@ var bundle_js = [
   "jam/jscss/lib/index.js",
   "jam/jquery/jquery.js",
   "jam/qTip2/dist/jquery.qtip.js",
+  "lib/foundation.js",
+  "lib/foundation.topbar.js",
   "temp/templates.js",
   "dist/compiled_css.js",
   "src/garden-menu-widget.css.js",

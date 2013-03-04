@@ -9,9 +9,8 @@ var queryOptions = findScriptParams();
 
 window.garden_ui = new garden_menu_widget(db, queryOptions);
 window.garden_ui.init(function(err){
-    //console.log('init', err);
+
 });
-window.testJQuery = $;
 $.noConflict(true);
 
 

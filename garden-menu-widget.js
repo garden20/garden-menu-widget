@@ -256,7 +256,7 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    if (!me.options.disablePouch) {
+    if (!me.options.disablePouch && !data.no_db_file) {
         // add a sync icon
         me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
             size: 21,
@@ -295,7 +295,7 @@ app.prototype.loadTopbar = function(data, callback) {
             }
         });
     } else {
-        $('dashboard-topbar-offline-icon').hide();
+        $('#dashboard-topbar-offline-icon').hide();
     }
 
     if (callback) callback(null);

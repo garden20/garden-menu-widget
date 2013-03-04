@@ -36,7 +36,7 @@ return {
         show_gravatar : true,
         show_username : true,
         notification_theme: 'libnotify',
-        admin_show_futon : false
+        show_futon : true
     },
     sessions : {
         type : 'internal',

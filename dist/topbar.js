@@ -9986,6 +9986,8 @@ var app = function(dashboard_db_url, options) {
             apps: [],
             scripts: []
         };
+        if (err && err.status === 404 && err.reason === 'no_db_file') return topbar_empty(results, callback);
+        if (err) return callback(err);
         async.forEach(resp.rows, function(row, cb){
             if (row.key[0] === 0) results.settingsDoc = row.value;
             if (row.key[0] === 1) {
@@ -10011,6 +10013,11 @@ var app = function(dashboard_db_url, options) {
         }, function(err){
             callback(err, results);
         });
+    };
+
+    var topbar_empty = function(results, callback) {
+        results.no_db_file = true;
+        callback(null, results);
     };
 
     var allAssets_local = function(callback) {
@@ -10170,7 +10177,7 @@ return {
         show_gravatar : true,
         show_username : true,
         notification_theme: 'libnotify',
-        admin_show_futon : false
+        show_futon : true
     },
     sessions : {
         type : 'internal',
@@ -10236,7 +10243,7 @@ app.prototype.getAppLinks = function(options, callback) {
     }
 
     menu.dashboard_core.topbar(function(err, results) {
-
+        if (err) return callback(err);
 
         menu.settings = _.defaults(results.settingsDoc, default_settings);
         var settings = results.settingsDoc;
@@ -13973,30 +13980,39 @@ return __p;
 this["JST"]["templates/topbar.underscore"] = function(obj){
 var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};
 with(obj||{}){
-__p+='<div class="topbar-right">\n    <div id="dashboard-profile"></div>\n    <div id="dashboard-topbar-offline-icon"></div>\n</div>\n<div class="topbar-middle">\n\n    <ul class="kanso-nav">\n\n        ';
+__p+='<div class="topbar-container">\n    <div class="topbar-right">\n        <div id="dashboard-profile"></div>\n        <div id="dashboard-topbar-offline-icon"></div>\n    </div>\n    <div class="topbar-middle">\n\n        <ul class="kanso-nav">\n\n            ';
  _.each(grouped_apps.apps, function(app) { 
-;__p+='\n        <li>\n            <a href="'+
+;__p+='\n            <li>\n                <a href="'+
 ( app.link )+
-'"\n\n            ';
+'"\n\n                ';
  if (app.db) {  
-;__p+='\n                data-db="'+
+;__p+='\n                    data-db="'+
 (app.db)+
-'"\n            ';
+'"\n                ';
  } 
-;__p+='\n\n            ';
+;__p+='\n\n                ';
  if (app.desc) {  
-;__p+='\n                title="'+
+;__p+='\n                    title="'+
 (app.desc)+
-'"\n            ';
+'"\n                ';
  } 
-;__p+='\n\n            >'+
+;__p+='\n\n                >'+
 ( app.title )+
-'</a>\n        </li>\n        ';
+'</a>\n            </li>\n            ';
  }) 
-;__p+='\n    </ul>\n\n\n</div>\n';
+;__p+='\n\n            ';
+ if (settingsDoc.top_nav_bar.show_futon) {  
+;__p+='\n                <li><a href="/_utils/">Futon</a></li>\n            ';
+ } 
+;__p+='\n        </ul>\n\n\n    </div>\n</div>\n';
 }
 return __p;
 };
+(function (root, factory) {if (typeof exports === 'object') {module.exports = factory(); } else if (typeof define === 'function' && define.amd) {define([],factory); } else { root.garden_menu_widget_extra_css = factory();} }(this, function () {  
+
+return {".qtip":{"position":"absolute","left":"-28000px","top":"-28000px","display":"none","max-width":"280px","min-width":"50px","font-size":"10.5px","line-height":"12px","direction":"ltr"},".qtip-content":{"position":"relative","padding":"5px 9px","overflow":"hidden","text-align":"left","word-wrap":"break-word"},".qtip-titlebar":{"position":"relative","padding":"5px 35px 5px 10px","overflow":"hidden","border-width":"0 0 1px","font-weight":"bold"},".qtip-titlebar + .qtip-content":{"border-top-width":"0 !important"},".qtip-close":{"position":"absolute","right":"-9px","top":"-9px","cursor":"pointer","outline":"medium none","border-width":"1px","border-style":"solid","border-color":"transparent"},".qtip-titlebar .qtip-close":{"right":"4px","top":"50%","margin-top":"-9px"},"* html .qtip-titlebar .qtip-close":{"top":"16px"},".qtip-titlebar .ui-icon":{"display":"block","text-indent":"-1000em","direction":"ltr","vertical-align":"middle"},".qtip-icon .ui-icon":{"display":"block","text-indent":"0","direction":"ltr","vertical-align":"middle","-moz-border-radius":"3px","-webkit-border-radius":"3px","border-radius":"3px","text-decoration":"none","width":"18px","height":"14px","text-align":"center","font":"normal bold 10px/13px Tahoma,sans-serif","color":"inherit","background":"transparent none no-repeat -100em -100em"},".qtip-icon":{"-moz-border-radius":"3px","-webkit-border-radius":"3px","border-radius":"3px","text-decoration":"none"},".qtip-focus":{},".qtip-hover":{},".qtip-default":{"border-width":"1px","border-style":"solid","border-color":"#F1D031","background-color":"#FFFFA3","color":"#555"},".qtip-default .qtip-titlebar":{"background-color":"#FFEF93"},".qtip-default .qtip-icon":{"border-color":"#CCC","background":"#F1F1F1","color":"#777"},".qtip-default .qtip-titlebar .qtip-close":{"border-color":"#AAA","color":"#111"},".qtip-light":{"background-color":"white","border-color":"#E2E2E2","color":"#454545"},".qtip-light .qtip-titlebar":{"background-color":"#f1f1f1"},".qtip-dark":{"background-color":"#505050","border-color":"#303030","color":"#f3f3f3"},".qtip-dark .qtip-titlebar":{"background-color":"#404040"},".qtip-dark .qtip-icon":{"border-color":"#444"},".qtip-dark .qtip-titlebar .ui-state-hover":{"border-color":"#303030"},".qtip-cream":{"background-color":"#FBF7AA","border-color":"#F9E98E","color":"#A27D35"},".qtip-cream .qtip-titlebar":{"background-color":"#F0DE7D"},".qtip-cream .qtip-close .qtip-icon":{"background-position":"-82px 0"},".qtip-red":{"background-color":"#F78B83","border-color":"#D95252","color":"#912323"},".qtip-red .qtip-titlebar":{"background-color":"#F06D65"},".qtip-red .qtip-close .qtip-icon":{"background-position":"-102px 0"},".qtip-red .qtip-icon":{"border-color":"#D95252"},".qtip-red .qtip-titlebar .ui-state-hover":{"border-color":"#D95252"},".qtip-green":{"background-color":"#CAED9E","border-color":"#90D93F","color":"#3F6219"},".qtip-green .qtip-titlebar":{"background-color":"#B0DE78"},".qtip-green .qtip-close .qtip-icon":{"background-position":"-42px 0"},".qtip-blue":{"background-color":"#E5F6FE","border-color":"#ADD9ED","color":"#5E99BD"},".qtip-blue .qtip-titlebar":{"background-color":"#D0E9F5"},".qtip-blue .qtip-close .qtip-icon":{"background-position":"-2px 0"},".qtip-shadow":{"-webkit-box-shadow":"1px 1px 3px 1px rgba(0, 0, 0, 0.15)","-moz-box-shadow":"1px 1px 3px 1px rgba(0, 0, 0, 0.15)","box-shadow":"1px 1px 3px 1px rgba(0, 0, 0, 0.15)"},".qtip-rounded":{"-moz-border-radius":"5px","-webkit-border-radius":"5px","border-radius":"5px"},".qtip-tipsy":{"-moz-border-radius":"5px","-webkit-border-radius":"5px","border-radius":"5px","background":"rgba(0, 0, 0, .87)","color":"white","border":"0 solid transparent","font-size":"11px","font-family":"'Lucida Grande', sans-serif","font-weight":"bold","line-height":"16px","text-shadow":"0 1px black"},".qtip-bootstrap":{"-moz-border-radius":"6px","-webkit-border-radius":"6px","border-radius":"6px","font-size":"14px","line-height":"20px","color":"#333333","padding":"1px","background-color":"#ffffff","border":"1px solid rgba(0, 0, 0, 0.2)","-webkit-box-shadow":"0 5px 10px rgba(0, 0, 0, 0.2)","-moz-box-shadow":"0 5px 10px rgba(0, 0, 0, 0.2)","box-shadow":"0 5px 10px rgba(0, 0, 0, 0.2)","-webkit-background-clip":"padding-box","-moz-background-clip":"padding","background-clip":"padding-box"},".qtip-rounded .qtip-titlebar":{"-moz-border-radius":"5px 5px 0 0","-webkit-border-radius":"5px 5px 0 0","border-radius":"5px 5px 0 0"},".qtip-youtube":{"-moz-border-radius":"2px","-webkit-border-radius":"2px","border-radius":"2px","-webkit-box-shadow":"0 0 3px #333","-moz-box-shadow":"0 0 3px #333","box-shadow":"0 0 3px #333","color":"white","border-width":"0","background":"#4A4A4A","background-image":"-o-linear-gradient(top,#4A4A4A 0,black 100%)"},".qtip-youtube .qtip-titlebar":{"background-color":"rgba(0,0,0,0)"},".qtip-youtube .qtip-content":{"padding":".75em","font":"12px arial,sans-serif","filter":"progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr=#4a4a4a,EndColorStr=#000000)","-ms-filter":"\"progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr=#4a4a4a,EndColorStr=#000000)","":"\""},".qtip-youtube .qtip-icon":{"border-color":"#222"},".qtip-youtube .qtip-titlebar .ui-state-hover":{"border-color":"#303030"},".qtip-jtools":{"background":"rgba(0, 0, 0, 0.7)","background-image":"-o-linear-gradient(top, #717171, #232323)","border":"2px solid rgba(241,241,241,1)","-moz-border-radius":"2px","-webkit-border-radius":"2px","border-radius":"2px","-webkit-box-shadow":"0 0 12px #333","-moz-box-shadow":"0 0 12px #333","box-shadow":"0 0 12px #333"},".qtip-jtools .qtip-titlebar":{"background-color":"transparent","filter":"progid:DXImageTransform.Microsoft.gradient(startColorstr=#717171,endColorstr=#4A4A4A)","-ms-filter":"\"progid:DXImageTransform.Microsoft.gradient(startColorstr=#717171,endColorstr=#4A4A4A)\"","background":"transparent","color":"white","border":"0 dashed transparent"},".qtip-jtools .qtip-content":{"filter":"progid:DXImageTransform.Microsoft.gradient(startColorstr=#4A4A4A,endColorstr=#232323)","-ms-filter":"\"progid:DXImageTransform.Microsoft.gradient(startColorstr=#4A4A4A,endColorstr=#232323)\"","background":"transparent","color":"white","border":"0 dashed transparent"},".qtip-jtools .qtip-icon":{"border-color":"#555"},".qtip-jtools .qtip-titlebar .ui-state-hover":{"border-color":"#333"},".qtip-cluetip":{"-webkit-box-shadow":"4px 4px 5px rgba(0, 0, 0, 0.4)","-moz-box-shadow":"4px 4px 5px rgba(0, 0, 0, 0.4)","box-shadow":"4px 4px 5px rgba(0, 0, 0, 0.4)","background-color":"#D9D9C2","color":"#111","border":"0 dashed transparent"},".qtip-cluetip .qtip-titlebar":{"background-color":"#87876A","color":"white","border":"0 dashed transparent"},".qtip-cluetip .qtip-icon":{"border-color":"#808064"},".qtip-cluetip .qtip-titlebar .ui-state-hover":{"border-color":"#696952","color":"#696952"},".qtip-tipsy .qtip-titlebar":{"padding":"6px 35px 0 10","background-color":"transparent"},".qtip-tipsy .qtip-content":{"padding":"6px 10"},".qtip-tipsy .qtip-icon":{"border-color":"#222","text-shadow":"none"},".qtip-tipsy .qtip-titlebar .ui-state-hover":{"border-color":"#303030"},".qtip-tipped":{"border":"3px solid #959FA9","-moz-border-radius":"3px","-webkit-border-radius":"3px","border-radius":"3px","background-color":"#F9F9F9","color":"#454545","font-weight":"normal","font-family":"serif"},".qtip-tipped .qtip-titlebar":{"border-bottom-width":"0","color":"white","background":"#3A79B8","background-image":"-o-linear-gradient(top, #3A79B8, #2E629D)","filter":"progid:DXImageTransform.Microsoft.gradient(startColorstr=#3A79B8,endColorstr=#2E629D)","-ms-filter":"\"progid:DXImageTransform.Microsoft.gradient(startColorstr=#3A79B8,endColorstr=#2E629D)\""},".qtip-tipped .qtip-icon":{"border":"2px solid #285589","background":"#285589"},".qtip-tipped .qtip-icon .ui-icon":{"background-color":"#FBFBFB","color":"#555"},".qtip-bootstrap .qtip-titlebar":{"padding":"8px 14px","margin":"0","font-size":"14px","font-weight":"normal","line-height":"18px","background-color":"#f7f7f7","border-bottom":"1px solid #ebebeb","-webkit-border-radius":"5px 5px 0 0","-moz-border-radius":"5px 5px 0 0","border-radius":"5px 5px 0 0"},".qtip-bootstrap .qtip-titlebar .qtip-close":{"right":"11px","top":"45%","border-style":"none"},".qtip-bootstrap .qtip-content":{"padding":"9px 14px"},".qtip-bootstrap .qtip-icon":{"background":"transparent"},".qtip-bootstrap .qtip-icon .ui-icon":{"width":"auto","height":"auto","float":"right","font-size":"20px","font-weight":"bold","line-height":"18px","color":"#000000","text-shadow":"0 1px 0 #ffffff","opacity":"0.2","filter":"alpha(opacity=20)"},".qtip-bootstrap .qtip-icon .ui-icon:hover":{"color":"#000000","text-decoration":"none","cursor":"pointer","opacity":"0.4","filter":"alpha(opacity=40)"},".qtip:not(.ie9haxors) div.qtip-content":{"filter":"none","-ms-filter":"none"},".qtip:not(.ie9haxors) div.qtip-titlebar":{"filter":"none","-ms-filter":"none"},".qtip .qtip-tip":{"margin":"0 auto","overflow":"hidden","z-index":"10","visibility":"hidden","position":"absolute","color":"#123456","background":"transparent","border":"0 dashed transparent"},"x:-o-prefocus":{"visibility":"hidden"},".qtip .qtip-tip .qtip-vml":{"position":"absolute","color":"#123456","background":"transparent","border":"0 dashed transparent","behavior":"url(#default#VML)","display":"inline-block","visibility":"visible"},".qtip .qtip-tip canvas":{"position":"absolute","color":"#123456","background":"transparent","border":"0 dashed transparent","top":"0","left":"0"},"#qtip-overlay":{"position":"fixed","left":"-10000em","top":"-10000em"},"#qtip-overlay.blurs":{"cursor":"pointer"},"#qtip-overlay div":{"position":"absolute","left":"0","top":"0","width":"100%","height":"100%","background-color":"black","opacity":"0.7","filter":"alpha(opacity=70)","-ms-filter":"\"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)\""},".qtipmodal-ie6fix":{"position":"absolute !important"}};
+  }));
+
 (function (root, factory) {
     if (typeof exports === 'object') {
         module.exports = factory();
@@ -14031,17 +14047,19 @@ var css =  {
     'z-index': '100'
 },
 
-
-
-'#dashboard-topbar .topbar-middle' : {
+'#dashboard-topbar .topbar-container': {
     'width' : '940px',
     'margin-left': 'auto',
     'margin-right': 'auto'
 },
 
-'#dashboard-topbar .topbar-right' : {
-    'float': 'right'
+'#dashboard-topbar .topbar-middle' : {
+    'float': 'left'
+},
 
+'#dashboard-topbar .topbar-right' : {
+    'float': 'right',
+    'margin-right': '6px'
 },
 
 '#dashboard-topbar a': {
@@ -14066,7 +14084,7 @@ var css =  {
 
 '#dashboard-topbar ul>li>a': {
     'display': 'block',
-    'padding': '3px 10px 2px 10px',
+    'padding': '3px 10px 2px 0',
     'color': '#BFBFBF',
     'font-weight': 'bold',
     'font-size': '14px',
@@ -14100,7 +14118,8 @@ var css =  {
 },
 
 '#dashboard-topbar-offline-icon svg' : {
-    'margin-top': '2px'
+    'margin-top': '2px',
+    'shape-rendering': 'auto'
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
@@ -14145,7 +14164,8 @@ var css =  {
     'padding': '2px 10px 2px 10px',
     'color': '#ccc',
     'text-decoration': 'none',
-    'height': '25px'
+    'height': '25px',
+    'font-size': '14px'
 },
 
 '#dashboard-topbar  a.login:hover': {
@@ -14158,7 +14178,12 @@ var css =  {
 
 
 return function(options) {
-    if (options.position) css['#dashboard-topbar'].position = options.position;
+    if (options.position) {
+        css['#dashboard-topbar'].position = options.position;
+    }
+    if (options.position === 'fixed') {
+        css['#dashboard-topbar'].top = "0";
+    }
     return css;
 };
 
@@ -14422,7 +14447,7 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    if (!me.options.disablePouch) {
+    if (!me.options.disablePouch && !data.no_db_file) {
         // add a sync icon
         me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
             size: 21,
@@ -14461,13 +14486,12 @@ app.prototype.loadTopbar = function(data, callback) {
             }
         });
     } else {
-        $('dashboard-topbar-offline-icon').hide();
+        $('#dashboard-topbar-offline-icon').hide();
     }
 
     if (callback) callback(null);
     $topbar.data('ready', true);
-    this.emitter.emit('dashboard-ready');
-    console.log('triggered');
+    this.emitter.emit('loaded');
 };
 
 
@@ -14656,9 +14680,8 @@ var queryOptions = findScriptParams();
 
 window.garden_ui = new garden_menu_widget(db, queryOptions);
 window.garden_ui.init(function(err){
-    //console.log('init', err);
+
 });
-window.testJQuery = $;
 $.noConflict(true);
 
 

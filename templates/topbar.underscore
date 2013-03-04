@@ -1,27 +1,33 @@
-<div class="topbar-right">
-    <div id="dashboard-profile"></div>
-    <div id="dashboard-topbar-offline-icon"></div>
-</div>
-<div class="topbar-middle">
+<div class="topbar-container">
+    <div class="topbar-right">
+        <div id="dashboard-profile"></div>
+        <div id="dashboard-topbar-offline-icon"></div>
+    </div>
+    <div class="topbar-middle">
 
-    <ul class="kanso-nav">
+        <ul class="kanso-nav">
 
-        <% _.each(grouped_apps.apps, function(app) { %>
-        <li>
-            <a href="<%= app.link %>"
+            <% _.each(grouped_apps.apps, function(app) { %>
+            <li>
+                <a href="<%= app.link %>"
 
-            <% if (app.db) {  %>
-                data-db="<%=app.db%>"
+                <% if (app.db) {  %>
+                    data-db="<%=app.db%>"
+                <% } %>
+
+                <% if (app.desc) {  %>
+                    title="<%=app.desc%>"
+                <% } %>
+
+                ><%= app.title %></a>
+            </li>
+            <% }) %>
+
+            <% if (settingsDoc.top_nav_bar.show_futon) {  %>
+                <li><a href="/_utils/">Futon</a></li>
             <% } %>
-
-            <% if (app.desc) {  %>
-                title="<%=app.desc%>"
-            <% } %>
-
-            ><%= app.title %></a>
-        </li>
-        <% }) %>
-    </ul>
+        </ul>
 
 
+    </div>
 </div>

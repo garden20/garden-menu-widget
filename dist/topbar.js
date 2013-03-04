@@ -14520,8 +14520,12 @@ return __p;
 this["JST"]["templates/topbar.underscore"] = function(obj){
 var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};
 with(obj||{}){
-__p+='<nav class="top-bar">\n\n    <ul class="title-area">\n      <!-- Title Area -->\n      <li class="name">\n        <h1><a href="/">Garden</a></h1>\n      </li>\n      <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->\n      <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>\n    </ul>\n\n\n    <section class="top-bar-section">\n        <ul class="left kanso-nav">\n            ';
- _.each(grouped_apps.apps, function(app) { 
+__p+='';
+ if (options.sticky) { 
+;__p+='\n<div class="sticky">\n';
+ } 
+;__p+='\n\n\n<nav class="top-bar">\n\n    <ul class="title-area">\n      <!-- Title Area -->\n      <li class="name">\n        <h1><a href="/">Garden</a></h1>\n      </li>\n      <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->\n      <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>\n    </ul>\n\n\n    <section class="top-bar-section">\n        <ul class="left kanso-nav">\n            ';
+ _.each(data.grouped_apps.apps, function(app) { 
 ;__p+='\n            <li>\n                <a href="'+
 ( app.link )+
 '"\n\n                ';
@@ -14541,10 +14545,14 @@ __p+='<nav class="top-bar">\n\n    <ul class="title-area">\n      <!-- Title Are
 '</a>\n            </li>\n            ';
  }) 
 ;__p+='\n\n            ';
- if (settingsDoc.top_nav_bar.show_futon) {  
+ if (data.settingsDoc.top_nav_bar.show_futon) {  
 ;__p+='\n                <li><a href="/_utils/">Futon</a></li>\n            ';
  } 
-;__p+='\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n\n';
+;__p+='\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n';
+ if (options.sticky) { 
+;__p+='\n</div>\n';
+ } 
+;__p+='';
 }
 return __p;
 };
@@ -14633,10 +14641,12 @@ var css =  {
 
 return function(options) {
     if (options.position) {
-        //css['#dashboard-topbar'].position = options.position;
+        css['#dashboard-topbar'].position = options.position;
     }
     if (options.position === 'fixed') {
-        //css['#dashboard-topbar'].top = "0";
+        css['#dashboard-topbar'].top = "0";
+        css['#dashboard-topbar'].width = "100%";
+        css['#dashboard-topbar']['z-index'] = "1000";
     }
     return css;
 };
@@ -14688,6 +14698,7 @@ var app = function(dashboard_db_url, options) {
         disablePouch: true,
         showSession: true,
         divSelector: 'body',
+        sticky: false,
         position: 'relative'
     };
 
@@ -14784,7 +14795,7 @@ app.prototype.loadTopbar = function(data, callback) {
     // for the new foundation prefixed stuff
     $topbar.addClass('dashboard-topbar');
 
-    $topbar.html(topbar_t(data));
+    $topbar.html(topbar_t({data: data, options: me.options } ));
 
     $(document).foundation();
     var path = window.location.pathname;

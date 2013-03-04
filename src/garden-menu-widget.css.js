@@ -78,10 +78,12 @@ var css =  {
 
 return function(options) {
     if (options.position) {
-        //css['#dashboard-topbar'].position = options.position;
+        css['#dashboard-topbar'].position = options.position;
     }
     if (options.position === 'fixed') {
-        //css['#dashboard-topbar'].top = "0";
+        css['#dashboard-topbar'].top = "0";
+        css['#dashboard-topbar'].width = "100%";
+        css['#dashboard-topbar']['z-index'] = "1000";
     }
     return css;
 };

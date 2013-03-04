@@ -1,3 +1,8 @@
+<% if (options.sticky) { %>
+<div class="sticky">
+<% } %>
+
+
 <nav class="top-bar">
 
     <ul class="title-area">
@@ -12,7 +17,7 @@
 
     <section class="top-bar-section">
         <ul class="left kanso-nav">
-            <% _.each(grouped_apps.apps, function(app) { %>
+            <% _.each(data.grouped_apps.apps, function(app) { %>
             <li>
                 <a href="<%= app.link %>"
 
@@ -28,7 +33,7 @@
             </li>
             <% }) %>
 
-            <% if (settingsDoc.top_nav_bar.show_futon) {  %>
+            <% if (data.settingsDoc.top_nav_bar.show_futon) {  %>
                 <li><a href="/_utils/">Futon</a></li>
             <% } %>
         </ul>
@@ -43,4 +48,6 @@
       </section>
 </nav>
 
-
+<% if (options.sticky) { %>
+</div>
+<% } %>

@@ -43,6 +43,7 @@ var app = function(dashboard_db_url, options) {
         disablePouch: true,
         showSession: true,
         divSelector: 'body',
+        sticky: false,
         position: 'relative'
     };
 
@@ -139,7 +140,7 @@ app.prototype.loadTopbar = function(data, callback) {
     // for the new foundation prefixed stuff
     $topbar.addClass('dashboard-topbar');
 
-    $topbar.html(topbar_t(data));
+    $topbar.html(topbar_t({data: data, options: me.options } ));
 
     $(document).foundation();
     var path = window.location.pathname;

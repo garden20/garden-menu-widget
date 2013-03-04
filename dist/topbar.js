@@ -14605,6 +14605,10 @@ var css =  {
     'background-color': '#111111'
 },
 
+'#dashboard-topbar .top-bar.expanded .top-bar-section .right': {
+    'background-color': '#333333'
+},
+
 '#dashboard-topbar a' : {
   'text-decoration': 'none',
   'text-shadow': 'none'
@@ -14616,11 +14620,9 @@ var css =  {
 
 '#dashboard-topbar-offline-icon' : {
     'cursor': 'pointer',
-    'padding': '0 3px',
+    'padding': '0 5px',
+    'height': '45px'
 
-    'width': '25px',
-    'height': '25px',
-    'float': 'left'
 },
 
 '#dashboard-topbar-offline-icon:hover' : {
@@ -14628,7 +14630,7 @@ var css =  {
 },
 
 '#dashboard-topbar-offline-icon svg' : {
-    'margin-top': '2px',
+    'margin-top': '12px',
     'shape-rendering': 'auto'
     // 'position': 'relative',
     // 'top': '2px',
@@ -14950,7 +14952,7 @@ app.prototype.loadTopbar = function(data, callback) {
         });
 
         // on click on sync icon
-        me.sync_icon.click(function(){
+        $('#dashboard-topbar-offline-icon').click(function(){
             var state = me.core.getState();
             if (state === 'FIRST_VISIT') {
                 me.sync_icon.syncing();

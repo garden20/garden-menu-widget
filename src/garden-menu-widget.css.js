@@ -28,7 +28,8 @@ var css =  {
     'font-style': 'normal',
     'font-size': '16px',
     '-webkit-font-smoothing': 'antialiased',
-    'text-shadow': 'none'
+    'text-shadow': 'none',
+    'z-index': '10000'
 },
 
 
@@ -68,7 +69,11 @@ var css =  {
 
 '#dashboard-topbar-offline-icon svg' : {
     'margin-top': '12px',
-    'shape-rendering': 'auto'
+    'shape-rendering': 'auto',
+
+    // overcome some bootstrap stuff
+    'width': 'auto'
+
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
@@ -85,7 +90,7 @@ return function(options) {
     if (options.position === 'fixed') {
         css['#dashboard-topbar'].top = "0";
         css['#dashboard-topbar'].width = "100%";
-        css['#dashboard-topbar']['z-index'] = "1000";
+        css['#dashboard-topbar']['z-index'] = "10000";
     }
     return css;
 };

@@ -1,7 +1,7 @@
 var root_url = window.location,
     db = url.resolve(root_url, '/dashboard'),
     // the hardcoded, pre agreed location of this script.
-    baseJavascript = "/dashboard/_design/dashboard/_rewrite/static/js/topbar.js";
+    scriptName = "topbar.js";
 
 
 var queryOptions = findScriptParams();
@@ -21,11 +21,12 @@ function findScriptParams() {
     var results = {};
     $.each(links, function(i, script){
         var src = $(script).attr('src');
-        if (src && src.indexOf(baseJavascript) === 0) {
-            var param =  src.split('?')[1];
-            console.log(param);
-            if (param) {
-                results = parseQueryString(param);
+        if (src) {
+
+            var param =  src.split('?');
+            if (!endsWith(param[0], scriptName)) return;
+            if (param[1]) {
+                results = parseQueryString(param[1]);
             }
         }
     });
@@ -59,4 +60,8 @@ function reduce(arr, fn, initial){
   }
 
   return curr;
+}
+
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }

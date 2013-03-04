@@ -39,6 +39,7 @@
     "grunt-jam": "0.3.4",
     "css2json": "0.0.4",
     "couchapp": "0.9.1",
-    "grunt-couchapp": "~0.1.0"
+    "grunt-couchapp": "~0.1.0",
+    "css-prefix": "0.0.2"
   }
 }

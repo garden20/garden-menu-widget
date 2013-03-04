@@ -18,76 +18,34 @@ function getTopbarBackground(from, to) {
 
 
 var css =  {
+
+// These are missing from the foundation css, but seem to be needed:
+
 '#dashboard-topbar' : {
-
+    'color': '#222222',
+    'font-family': '"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif',
     'font-weight': 'normal',
-
-    'color': '#404040',
-    'height': '25px',
-    'width': '100%',
-    'background': getTopbarBackground('#4a4c4d', '#2b2d2d'),
-    'background-color': '#2b2d2d',
-    'font-family': "titillium, ProximaNovaRgRegular, 'Helvetica Neue', helvetica, arial, sans-serif",
-    'overflow': 'hidden',
-    'z-index': '100'
-},
-
-'#dashboard-topbar .topbar-container': {
-    'width' : '940px',
-    'margin-left': 'auto',
-    'margin-right': 'auto'
-},
-
-'#dashboard-topbar .topbar-middle' : {
-    'float': 'left'
-},
-
-'#dashboard-topbar .topbar-right' : {
-    'float': 'right',
-    'margin-right': '6px'
-},
-
-'#dashboard-topbar a': {
-    'text-decoration': 'none',
-    'font-weight': 'normal'
+    'font-style': 'normal'
 },
 
 
-'#dashboard-topbar ul': {
+'.dashboard-topbar div, .dashboard-topbar dl, .dashboard-topbar dt, .dashboard-topbar dd, .dashboard-topbar ul, .dashboard-topbar ol, .dashboard-topbar li, .dashboard-topbar h1, .dashboard-topbar h2, .dashboard-topbar h3, .dashboard-topbar h4, .dashboard-topbar h5, .dashboard-topbar h6' : {
     'margin': '0',
     'padding': '0',
-    'height': '25px',
-    'overflow': 'hidden',
-    'list-style-type': 'none'
-
+    'direction': 'ltr'
 },
 
-'#dashboard-topbar ul>li': {
-    'display': 'block',
-    'float': 'left'
+'#dashboard-topbar .top-bar-section .right': {
+    'background-color': '#111111'
 },
 
-'#dashboard-topbar ul>li>a': {
-    'display': 'block',
-    'padding': '3px 10px 2px 0',
-    'color': '#BFBFBF',
-    'font-weight': 'bold',
-    'font-size': '14px',
-    'line-height': '18px',
-    'text-transform': 'capitalize',
-    'text-shadow': '1px 1px 1px #111'
+'#dashboard-topbar a' : {
+  'text-decoration': 'none'
+},
+'#dashboard-topbar a img': {
+    'border': 'none'
 },
 
-'#dashboard-topbar ul>li>a:hover': {
-    'color': '#FFFFFF',
-    'text-decoration': 'none'
-},
-
-'#dashboard-topbar ul>li.active>a.active' : {
-    'border-top': '2px solid #1d1d1d !important',
-    'color': '#FFF',
-    'padding-top': '1px !important'
-},
 
 '#dashboard-topbar-offline-icon' : {
     'cursor': 'pointer',
@@ -99,7 +57,7 @@ var css =  {
 },
 
 '#dashboard-topbar-offline-icon:hover' : {
-    'background-color': '#4d4d4d'
+
 },
 
 '#dashboard-topbar-offline-icon svg' : {
@@ -108,54 +66,6 @@ var css =  {
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
-},
-
-'#dashboard-profile': {
-    'display': 'inline-block',
-    'padding': '0',
-    'cursor': 'pointer',
-    //'position': 'relative',
-    'height': '25px',
-    'float': 'right'
-},
-
-
-'#dashboard-profile:hover' : {
-    'background-color': '#4d4d4d'
-},
-
-'#dashboard-profile img': {
-    //'position': 'relative',
-    'margin-top': '2px',
-    'padding-left': '10px',
-    'float': 'left'
-},
-
-'#dashboard-profile h4': {
-    'display': 'inline-block',
-    'margin': '0',
-    //'position': 'relative',
-    'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
-    'font-size': '13px',
-    'font-weight': 'normal',
-    'line-height': '18px',
-    'color': '#BFBFBF',
-    'padding': '3px 10px 0 6px'
-},
-
-
-'#dashboard-topbar   a.login': {
-    'display': 'block',
-    'padding': '2px 10px 2px 10px',
-    'color': '#ccc',
-    'text-decoration': 'none',
-    'height': '25px',
-    'font-size': '14px'
-},
-
-'#dashboard-topbar  a.login:hover': {
-    'color': 'white',
-    'text-decoration': 'none'
 }
 
 
@@ -164,10 +74,10 @@ var css =  {
 
 return function(options) {
     if (options.position) {
-        css['#dashboard-topbar'].position = options.position;
+        //css['#dashboard-topbar'].position = options.position;
     }
     if (options.position === 'fixed') {
-        css['#dashboard-topbar'].top = "0";
+        //css['#dashboard-topbar'].top = "0";
     }
     return css;
 };

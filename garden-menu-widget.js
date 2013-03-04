@@ -123,9 +123,12 @@ app.prototype.removeListener = function(event, listener) {
 app.prototype.loadTopbar = function(data, callback) {
     var me = this;
 
-    // check for other styles
+
+
+    jscss.embed(extra_css);
+
+    // the computed styles always win
     jscss.embed(jscss.compile(css(me.options)));
-    jscss.embed(jscss.compile(extra_css));
 
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
@@ -133,6 +136,8 @@ app.prototype.loadTopbar = function(data, callback) {
         $(me.options.divSelector).prepend($topbar);
     }
 
+    // for the new foundation prefixed stuff
+    $topbar.addClass('dashboard-topbar');
 
     $topbar.html(topbar_t(data));
     var path = window.location.pathname;

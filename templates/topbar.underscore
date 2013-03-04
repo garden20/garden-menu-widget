@@ -1,12 +1,17 @@
-<div class="topbar-container">
-    <div class="topbar-right">
-        <div id="dashboard-profile"></div>
-        <div id="dashboard-topbar-offline-icon"></div>
-    </div>
-    <div class="topbar-middle">
+<nav class="top-bar">
 
-        <ul class="kanso-nav">
+    <ul class="title-area">
+      <!-- Title Area -->
+      <li class="name">
+        <h1><a href="/">Garden</a></h1>
+      </li>
+      <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->
+      <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+    </ul>
 
+
+    <section class="top-bar-section">
+        <ul class="left">
             <% _.each(grouped_apps.apps, function(app) { %>
             <li>
                 <a href="<%= app.link %>"
@@ -28,6 +33,14 @@
             <% } %>
         </ul>
 
+        <!-- Right Nav Section -->
+        <ul class="right">
+          <li class="divider"></li>
+          <li><div id="dashboard-topbar-offline-icon"></div></li>
+          <li class="divider"></li>
+          <li id="dashboard-profile"></li>
+        </ul>
+      </section>
+</nav>
 
-    </div>
-</div>
+

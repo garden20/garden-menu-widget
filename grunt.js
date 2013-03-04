@@ -39,7 +39,16 @@ var bundle_js = [
 ];
 
 var extraCss = [
-  "jam/qTip2/dist/jquery.qtip.css"
+
+  {
+    "file": "css/foundation.css",
+    "prefix": true
+  },
+  {
+    "file": "jam/qTip2/dist/jquery.qtip.css",
+    "prefix": false
+
+  }
 ];
 
 var dist_topbar = "dist/topbar.js";
@@ -55,6 +64,17 @@ var couch_config = {
           }
 };
 
+// borrowed from https://github.com/requirejs/text/blob/master/text.js#L44
+var jsEscape = function (content) {
+      return content.replace(/(['\\])/g, '\\$1')
+          .replace(/[\f]/g, "\\f")
+          .replace(/[\b]/g, "\\b")
+          .replace(/[\n]/g, "\\n")
+          .replace(/[\t]/g, "\\t")
+          .replace(/[\r]/g, "\\r")
+          .replace(/[\u2028]/g, "\\u2028")
+          .replace(/[\u2029]/g, "\\u2029");
+};
 
 module.exports = function(grunt) {
 
@@ -86,7 +106,7 @@ module.exports = function(grunt) {
     concat: {
       css: {
         src: grunt.utils._.flatten([
-          "<banner:meta.css.top>", "temp/css.json", "<banner:meta.css.bottom>"
+          "<banner:meta.css.top>", "temp/temp.css", "<banner:meta.css.bottom>"
         ]),
         dest: 'dist/compiled_css.js'
       },
@@ -122,21 +142,36 @@ module.exports = function(grunt) {
   // Load the couchapp task
   grunt.loadNpmTasks('grunt-couchapp');
 
-  grunt.registerTask('css2json', 'My "asyncfoo" task.', function() {
+  grunt.registerTask('css2str', 'My "asyncfoo" task.', function() {
     // Force task into async mode and grab a handle to the "done" function.
     var done = this.async();
 
-    var full_css = {};
+    var insertPrefix = require('css-prefix');
 
-    grunt.util.async.forEach(extraCss, function(file, cb) {
-      var basePath = path.join(__dirname, "jam/qTip2/dist/jquery.qtip.css");
+    var full_css = '';
+
+    grunt.util.async.forEach(extraCss, function(details, cb) {
+      var basePath = path.join(__dirname, details.file);
       var css = fs.readFileSync(basePath, 'utf8');
-      full_css = grunt.util._.extend(full_css, css2json(css));
+
+
+
+      if (details.prefix) {
+         css = insertPrefix({
+             prefix : '',
+             parentClass : 'dashboard-topbar'
+         }, css);
+      }
+
+      full_css = [full_css, css].join('\n');
       cb();
     }, function(){
       grunt.config.set('extraCss', full_css);
       try { fs.mkdirSync('temp'); } catch(ignore){}
-      fs.writeFileSync('temp/css.json', 'return ' +  JSON.stringify(full_css) + ';');
+
+      var escaped_css = "return '" + jsEscape(full_css)  + "'";
+
+      fs.writeFileSync('temp/temp.css', escaped_css);
       done();
     });
   });
@@ -144,10 +179,10 @@ module.exports = function(grunt) {
 
 
   // Default task.
-  grunt.registerTask('default', 'css2json jst concat min');
+  grunt.registerTask('default', 'css2str jst concat min');
 
   // jam build.
-  grunt.registerTask('amd', 'css2json jst concat min jam');
+  grunt.registerTask('amd', 'css2str jst concat min jam');
 
   // test
   grunt.registerTask('test', 'rmcouchdb:test mkcouchdb:test couchapp:test qunit');

@@ -295,7 +295,7 @@ app.prototype.loadTopbar = function(data, callback) {
         });
 
         // on click on sync icon
-        me.sync_icon.click(function(){
+        $('#dashboard-topbar-offline-icon').click(function(){
             var state = me.core.getState();
             if (state === 'FIRST_VISIT') {
                 me.sync_icon.syncing();

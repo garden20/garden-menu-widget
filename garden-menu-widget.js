@@ -194,7 +194,7 @@ app.prototype.loadTopbar = function(data, callback) {
                      },
                      error  : function(err, b, c) {
                         pass = false;
-                        app.log('Access Denied.', {center:true});
+                        app.log('Access Denied.', {type: 'error'});
                      }
 
                  });
@@ -356,7 +356,7 @@ function logout() {
             }
         },
         error  : function() {
-            alert('error loging out.');
+            app.alert('error loging out.');
         }
      });
     return false;
@@ -386,10 +386,15 @@ function checkLogoutDestination() {
 
 // stuff for notifications
 app.log = function(msg, options) {
+    var type = 'success';
+    if (options && options.type) type = options.type;
 
+   window.Alertify.log[type](msg);
 };
 
-
+app.alert = function(msg, options) {
+    window.Alertify.dialog.alert(msg);
+};
 
 
 return app;

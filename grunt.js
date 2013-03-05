@@ -30,7 +30,7 @@ var bundle_js = [
   "jam/garden-menu/garden-menu.js",
 
   "jam/jscss/lib/index.js",
-
+  "lib/alertify.js",
   "lib/foundation.js",
   "lib/foundation.topbar.js",
   "temp/templates.js",
@@ -47,9 +47,12 @@ var extraCss = [
     "prefix": true
   },
   {
-    "file": "jam/qTip2/dist/jquery.qtip.css",
+    "file": "css/alertify.css",
     "prefix": false
-
+  },
+  {
+    "file": "css/alertify.default.css",
+    "prefix": false
   }
 ];
 

@@ -40,12 +40,17 @@ var css =  {
 },
 
 '#dashboard-topbar .top-bar-section .right': {
-    'background-color': '#111111'
+    'background-color': '#111111',
+    'position': 'absolute',
+    'top': '0px',
+    'right': '0px'
 },
 
 '#dashboard-topbar .top-bar.expanded .top-bar-section .right': {
-    'background-color': '#333333'
+    'background-color': '#333333',
+    'position': 'relative'
 },
+
 
 '#dashboard-topbar a' : {
   'text-decoration': 'none',

@@ -82,8 +82,23 @@ var css =  {
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
-}
+},
 
+'#dashboard-profile a.profile-link' : {
+    'cursor': 'pointer',
+    'height': '45px'
+},
+
+'#dashboard-profile a.profile-link img': {
+    'float' : 'left',
+    'top': '12px',
+    'position': 'relative',
+    'margin-right': '5px'
+},
+
+'#dashboard-profile a.profile-link span': {
+    'float' : 'right'
+}
 
 };  // end of css block
 

@@ -1,6 +1,8 @@
 <% if (!is_user) { %>
     <a class="login" href="<%=login_url%>">Login</a>
 <% } else { %>
-    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">
-    <h4><%= displayName %></h4>
+    <a class="profile-link">
+        <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">
+        <span><%= displayName %></span>
+    </a>
 <% } %>

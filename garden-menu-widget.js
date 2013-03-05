@@ -145,6 +145,13 @@ app.prototype.loadTopbar = function(data, callback) {
     $(document).foundation();
     var path = window.location.pathname;
 
+    // current futon hack. Remove when fauxton is ready
+    if (path.indexOf('/_utils/') === 0) {
+        $('#footer').css('bottom', '20px');
+    }
+
+
+
     // highlight the best thing
     var dash = $topbar.find('a.home').attr('href');
     if (dash == path)  $topbar.find('a.home').addClass('active');

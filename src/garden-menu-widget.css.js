@@ -60,6 +60,16 @@ var css =  {
     'border': 'none'
 },
 
+// fix for current futon
+'#dashboard-topbar .top-bar .name h1 a' : {
+    'background': 'none'
+},
+
+'#dashboard-topbar .top-bar .name h1' : {
+    'background': 'none',
+    'border': 'none'
+},
+
 
 '#dashboard-topbar-offline-icon' : {
     'cursor': 'pointer',

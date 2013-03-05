@@ -16,7 +16,7 @@
         ],factory);
     } else {
         root.garden_menu_widget = factory(
-            root.jQuery,
+            root.Zepto,
             root._,
             root.events,
             root.url,
@@ -142,7 +142,14 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $topbar.html(topbar_t({data: data, options: me.options } ));
 
-    $(document).foundation();
+    try {
+        $(document).foundation();
+    } catch(e) {
+        // so hacky. Depending how the user did the scripts, foundation might be
+        // bound to jquery on the window scope
+        window.$(document).foundation();
+    }
+
     var path = window.location.pathname;
 
     // current futon hack. Remove when fauxton is ready
@@ -256,19 +263,6 @@ app.prototype.loadTopbar = function(data, callback) {
 
 
 
-    // Add a desciption tip
-    $('#dashboard-topbar a[title]').qtip({
-        show: {
-            delay: 2000
-        },
-        position: {
-            my: 'top center',
-            at: 'bottom center'
-        },
-        style: {
-            classes: 'qtip-tipsy qtip-shadow'
-        }
-    });
 
 
     if (!me.options.disablePouch && !data.no_db_file) {

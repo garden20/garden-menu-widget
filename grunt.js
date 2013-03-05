@@ -13,6 +13,7 @@ var template_dirs = ["templates/*.underscore"];
 
 /* ORDER HERE is _Very_ Important */
 var bundle_js = [
+  "lib/zepto.js",
   "lib/url.js",
   "jam/async/lib/async.js",
   "jam/underscore/underscore.js",
@@ -29,8 +30,7 @@ var bundle_js = [
   "jam/garden-menu/garden-menu.js",
 
   "jam/jscss/lib/index.js",
-  "jam/jquery/jquery.js",
-  "jam/qTip2/dist/jquery.qtip.js",
+
   "lib/foundation.js",
   "lib/foundation.topbar.js",
   "temp/templates.js",

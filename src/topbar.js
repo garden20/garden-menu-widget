@@ -6,12 +6,12 @@ var root_url = window.location,
 
 var queryOptions = findScriptParams();
 
+//this.$ = window.Zepto;
 
 window.garden_ui = new garden_menu_widget(db, queryOptions);
 window.garden_ui.init(function(err){
 
 });
-$.noConflict(true);
 
 
 

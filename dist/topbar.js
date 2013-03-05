@@ -14508,9 +14508,9 @@ __p+='';
 (login_url)+
 '">Login</a>\n';
  } else { 
-;__p+='\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <h4>'+
+;__p+='\n    <a class="profile-link">\n        <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n        <span>'+
 ( displayName )+
-'</h4>\n';
+'</span>\n    </a>\n';
  } 
 ;__p+='';
 }
@@ -14603,18 +14603,33 @@ var css =  {
 },
 
 '#dashboard-topbar .top-bar-section .right': {
-    'background-color': '#111111'
+    'background-color': '#111111',
+    'position': 'absolute',
+    'top': '0px',
+    'right': '0px'
 },
 
 '#dashboard-topbar .top-bar.expanded .top-bar-section .right': {
-    'background-color': '#333333'
+    'background-color': '#333333',
+    'position': 'relative'
 },
+
 
 '#dashboard-topbar a' : {
   'text-decoration': 'none',
   'text-shadow': 'none'
 },
 '#dashboard-topbar a img': {
+    'border': 'none'
+},
+
+// fix for current futon
+'#dashboard-topbar .top-bar .name h1 a' : {
+    'background': 'none'
+},
+
+'#dashboard-topbar .top-bar .name h1' : {
+    'background': 'none',
     'border': 'none'
 },
 
@@ -14640,8 +14655,23 @@ var css =  {
     // 'position': 'relative',
     // 'top': '2px',
     // 'left': '2px'
-}
+},
 
+'#dashboard-profile a.profile-link' : {
+    'cursor': 'pointer',
+    'height': '45px'
+},
+
+'#dashboard-profile a.profile-link img': {
+    'float' : 'left',
+    'top': '12px',
+    'position': 'relative',
+    'margin-right': '5px'
+},
+
+'#dashboard-profile a.profile-link span': {
+    'float' : 'right'
+}
 
 };  // end of css block
 
@@ -14806,6 +14836,13 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $(document).foundation();
     var path = window.location.pathname;
+
+    // current futon hack. Remove when fauxton is ready
+    if (path.indexOf('/_utils/') === 0) {
+        $('#footer').css('bottom', '20px');
+    }
+
+
 
     // highlight the best thing
     var dash = $topbar.find('a.home').attr('href');

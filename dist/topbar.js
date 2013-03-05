@@ -11997,6 +11997,856 @@ return app;
   return jscss;
 
 }));
+/*!
+ * alertify.js
+ * browser dialogs never looked so good
+ *
+ * @author Fabien Doiron <fabien.doiron@gmail.com>
+ * @copyright Fabien Doiron 2013
+ * @license MIT <http://opensource.org/licenses/mit-license.php>
+ * @link http://fabien-d.github.com/alertify.js/
+ * @module alertify
+ * @version 0.4.0rc1
+ */
+(function (global, document, undefined) {
+var AlertifyProto = (function () {
+    
+
+    var AlertifyProto,
+        add,
+        attach;
+
+    /**
+     * Add
+     * Update bind and unbind method for browser
+     * that support add/removeEventListener
+     *
+     * @return {undefined}
+     */
+    add = function () {
+        this.on = function (el, event, fn) {
+            el.addEventListener(event, fn, false);
+        };
+        this.off = function (el, event, fn) {
+            el.removeEventListener(event, fn, false);
+        };
+    };
+
+    /**
+     * Attach
+     * Update bind and unbind method for browser
+     * that support attach/detachEvent
+     *
+     * @return {undefined}
+     */
+    attach = function () {
+        this.on = function (el, event, fn) {
+            el.attachEvent("on" + event, fn);
+        };
+        this.off = function (el, event, fn) {
+            el.detachEvent("on" + event, fn);
+        };
+    };
+
+    /**
+     * Alertify Prototype API
+     *
+     * @type {Object}
+     */
+    AlertifyProto = {
+        _version : "0.4.0",
+        _prefix  : "alertify",
+        get: function (id) {
+            return document.getElementById(id);
+        },
+        on: function (el, event, fn) {
+            if (typeof el.addEventListener === "function") {
+                el.addEventListener(event, fn, false);
+                add.call(this);
+            } else if (el.attachEvent) {
+                el.attachEvent("on" + event, fn);
+                attach.call(this);
+            }
+        },
+        off: function (el, event, fn) {
+            if (typeof el.removeEventListener === "function") {
+                el.removeEventListener(event, fn, false);
+                add.call(this);
+            } else if (el.detachEvent) {
+                el.detachEvent("on" + event, fn);
+                attach.call(this);
+            }
+        }
+    };
+
+    return AlertifyProto;
+}());
+var Alertify = (function () {
+    
+
+    var Alertify = function () {};
+    Alertify.prototype = AlertifyProto;
+    Alertify = new Alertify();
+
+    return Alertify;
+}());
+var validate = (function () {
+    
+
+    var _checkValidation,
+        validate;
+
+    /**
+     * Validate Parameters
+     * The validation checks parameter against specified type.
+     * If the parameter is set to optional, is will be valid unless
+     * a parameter is specified and does not pass the test
+     *
+     * @param  {String}  type     Type to check parameter against
+     * @param  {Mixed}   param    Parameter to check
+     * @param  {Boolean} optional [Optional] Whether the parameter is optional
+     * @return {Boolean}
+     */
+    _checkValidation = function (type, param, optional) {
+        var valid = false;
+        if (optional && typeof param === "undefined") {
+            valid = true;
+        } else {
+            if (type === "object") {
+                valid = (typeof param === "object" && !(param instanceof Array));
+            } else {
+                valid = (typeof param === type);
+            }
+        }
+        return valid;
+    };
+
+    /**
+     * Validate API
+     *
+     * @type {Object}
+     */
+    validate = {
+        messages: {
+            invalidArguments: "Invalid arguments"
+        },
+        isFunction: function (param, optional) {
+            return _checkValidation("function", param, optional);
+        },
+        isNumber: function (param, optional) {
+            return _checkValidation("number", param, optional);
+        },
+        isObject: function (param, optional) {
+            return _checkValidation("object", param, optional);
+        },
+        isString: function (param, optional) {
+            return _checkValidation("string", param, optional);
+        },
+    };
+
+    return validate;
+}());
+var element = (function () {
+    
+
+    var element = {},
+        setAttributes;
+
+    /**
+     * Set Attributes
+     * Add attributes to a created element
+     *
+     * @param {Object} el     Created DOM element
+     * @param {Object} params [Optional] Attributes object
+     * @return {Object}
+     */
+    setAttributes = function (el, params) {
+        var k;
+        if (!validate.isObject(el) ||
+            !validate.isObject(params, true)) {
+            throw new Error(validate.messages.invalidArguments);
+        }
+        if (typeof params !== "undefined") {
+            if (params.attributes) {
+                for (k in params.attributes) {
+                    if (params.attributes.hasOwnProperty(k)) {
+                        el.setAttribute(k, params.attributes[k]);
+                    }
+                }
+            }
+            if (params.classes) {
+                el.className = params.classes;
+            }
+        }
+        return el;
+    };
+
+    /**
+     * element API
+     *
+     * @type {Object}
+     */
+    element = {
+        create: function (type, params) {
+            var el;
+            if (!validate.isString(type) ||
+                !validate.isObject(params, true)) {
+                throw new Error(validate.messages.invalidArguments);
+            }
+
+            el = document.createElement(type);
+            el = setAttributes(el, params);
+            return el;
+        },
+        ready: function (el) {
+            if (!validate.isObject(el)) {
+                throw new Error(validate.messages.invalidArguments);
+            }
+            if (el && el.scrollTop !== null) {
+                return;
+            } else {
+                this.ready();
+            }
+        }
+    };
+
+    return element;
+}());
+var transition = (function () {
+    
+
+    var transition;
+
+    /**
+     * Transition
+     * Determines if current browser supports CSS transitions
+     * And if so, assigns the proper transition event
+     *
+     * @return {Object}
+     */
+    transition = function () {
+        var t,
+            type,
+            supported   = false,
+            el          = element.create("fakeelement"),
+            transitions = {
+                "WebkitTransition" : "webkitTransitionEnd",
+                "MozTransition"    : "transitionend",
+                "OTransition"      : "otransitionend",
+                "transition"       : "transitionend"
+            };
+
+        for (t in transitions) {
+            if (el.style[t] !== undefined) {
+                type      = transitions[t];
+                supported = true;
+                break;
+            }
+        }
+
+        return {
+            type      : type,
+            supported : supported
+        };
+    };
+
+    return transition();
+}());
+var keys = (function () {
+    
+
+    var keys = {
+        ENTER : 13,
+        ESC   : 27,
+        SPACE : 32
+    };
+
+    return keys;
+}());
+var Dialog = (function () {
+    
+
+    var dialog,
+        _dialog = {};
+
+    var Dialog = function () {
+        var controls     = {},
+            dialog       = {},
+            isOpen       = false,
+            queue        = [],
+            tpl          = {},
+            prefixEl     = Alertify._prefix + "-dialog",
+            prefixCover  = Alertify._prefix + "-cover",
+            clsElShow    = prefixEl + " is-" + prefixEl + "-showing",
+            clsElHide    = prefixEl + " is-" + prefixEl + "-hidden",
+            clsCoverShow = prefixCover + " is-" + prefixCover + "-showing",
+            clsCoverHide = prefixCover + " is-" + prefixCover + "-hidden",
+            elCallee,
+            $,
+            appendBtns,
+            addListeners,
+            build,
+            hide,
+            init,
+            onBtnCancel,
+            onBtnOK,
+            onBtnResetFocus,
+            onFormSubmit,
+            onKeyUp,
+            open,
+            removeListeners,
+            setFocus,
+            setup;
+
+        tpl = {
+            buttons : {
+                holder : "<nav class=\"alertify-buttons\">{{buttons}}</nav>",
+                submit : "<button role=\"button\" type=\"submit\" class=\"alertify-button alertify-button-ok\" id=\"alertify-ok\">{{ok}}</button>",
+                ok     : "<button role=\"button\" type=\"button\" class=\"alertify-button alertify-button-ok\" id=\"alertify-ok\">{{ok}}</button>",
+                cancel : "<button role=\"button\" type=\"button\" class=\"alertify-button alertify-button-cancel\" id=\"alertify-cancel\">{{cancel}}</button>"
+            },
+            input   : "<div class=\"alertify-text-wrapper\"><input type=\"text\" class=\"alertify-text\" id=\"alertify-text\"></div>",
+            message : "<p class=\"alertify-message\">{{message}}</p>",
+            log     : "<article class=\"alertify-log{{class}}\">{{message}}</article>"
+        };
+
+        addListeners = function (item) {
+            // ok event handler
+            onBtnOK = function (event) {
+                var val = "";
+                if (typeof event.preventDefault !== "undefined") {
+                    event.preventDefault();
+                }
+                removeListeners();
+                hide();
+
+                if (controls.input) {
+                    val = controls.input.value;
+                }
+                if (typeof item.accept === "function") {
+                    if (controls.input) {
+                        item.accept(val);
+                    } else {
+                        item.accept();
+                    }
+                }
+                return false;
+            };
+
+            // cancel event handler
+            onBtnCancel = function (event) {
+                if (typeof event.preventDefault !== "undefined") {
+                    event.preventDefault();
+                }
+                removeListeners();
+                hide();
+                if (typeof item.deny === "function") {
+                    item.deny();
+                }
+                return false;
+            };
+
+            // keyup handler
+            onKeyUp = function (event) {
+                var keyCode = event.keyCode;
+                if (keyCode === keys.SPACE && !controls.input) {
+                    onBtnOK(event);
+                }
+                if (keyCode === keys.ESC && controls.cancel) {
+                    onBtnCancel(event);
+                }
+            };
+
+            // reset focus to first item in the dialog
+            onBtnResetFocus = function (event) {
+                if (controls.input) {
+                    controls.input.focus();
+                } else if (controls.cancel) {
+                    controls.cancel.focus();
+                } else {
+                    controls.ok.focus();
+                }
+            };
+
+            // handle reset focus link
+            // this ensures that the keyboard focus does not
+            // ever leave the dialog box until an action has
+            // been taken
+            Alertify.on(controls.reset, "focus", onBtnResetFocus);
+            // handle OK click
+            if (controls.ok) {
+                Alertify.on(controls.ok, "click", onBtnOK);
+            }
+            // handle Cancel click
+            if (controls.cancel) {
+                Alertify.on(controls.cancel, "click", onBtnCancel);
+            }
+            // listen for keys, Cancel => ESC
+            Alertify.on(document.body, "keyup", onKeyUp);
+            // bind form submit
+            if (controls.form) {
+                Alertify.on(controls.form, "submit", onBtnOK);
+            }
+            if (!transition.supported) {
+                setFocus();
+            }
+        };
+
+        /**
+         * Append Buttons
+         * Insert the buttons in the proper order
+         *
+         * @param  {String} secondary Cancel button string
+         * @param  {String} primary   OK button string
+         * @return {String}
+         */
+        appendBtns = function (secondary, primary) {
+            return dialog.buttonReverse ? primary + secondary : secondary + primary;
+        };
+
+        build = function (item) {
+            var html    = "",
+                type    = item.type,
+                message = item.message;
+
+            html += "<div class=\"alertify-dialog-inner\">";
+
+            if (dialog.buttonFocus === "none") {
+                html += "<a href=\"#\" id=\"alertify-noneFocus\" class=\"alertify-hidden\"></a>";
+            }
+
+            if (type === "prompt") {
+                html += "<form id=\"alertify-form\">";
+            }
+
+            html += "<article class=\"alertify-inner\">";
+            html += tpl.message.replace("{{message}}", message);
+
+            if (type === "prompt") {
+                html += tpl.input;
+            }
+
+            html += tpl.buttons.holder;
+            html += "</article>";
+
+            if (type === "prompt") {
+                html += "</form>";
+            }
+
+            html += "<a id=\"alertify-resetFocus\" class=\"alertify-resetFocus\" href=\"#\">Reset Focus</a>";
+            html += "</div>";
+
+            switch (type) {
+            case "confirm":
+                html = html.replace("{{buttons}}", appendBtns(tpl.buttons.cancel, tpl.buttons.ok));
+                html = html.replace("{{ok}}", dialog.labels.ok).replace("{{cancel}}", dialog.labels.cancel);
+                break;
+            case "prompt":
+                html = html.replace("{{buttons}}", appendBtns(tpl.buttons.cancel, tpl.buttons.submit));
+                html = html.replace("{{ok}}", dialog.labels.ok).replace("{{cancel}}", dialog.labels.cancel);
+                break;
+            case "alert":
+                html = html.replace("{{buttons}}", tpl.buttons.ok);
+                html = html.replace("{{ok}}", dialog.labels.ok);
+                break;
+            }
+
+            return html;
+        };
+
+        hide = function () {
+            var transitionDone;
+            queue.splice(0,1);
+            if (queue.length > 0) {
+                open(true);
+            } else {
+                isOpen = false;
+                transitionDone = function (event) {
+                    event.stopPropagation();
+                    //this.className += " alertify-isHidden";
+                    Alertify.off(this, transition.type, transitionDone);
+                };
+                if (transition.supported) {
+                    Alertify.on(dialog.el, transition.type, transitionDone);
+                    dialog.el.className = clsElHide;
+                } else {
+                    dialog.el.className = clsElHide;
+                }
+                dialog.cover.className  = clsCoverHide;
+                elCallee.focus();
+            }
+        };
+
+        /**
+         * Initialize Dialog
+         * Create the dialog and cover elements
+         *
+         * @return {Object}
+         */
+        init = function () {
+            var cover = element.create("div", { classes: clsCoverHide }),
+                el    = element.create("section", { classes: clsElHide });
+
+            document.body.appendChild(cover);
+            document.body.appendChild(el);
+            element.ready(cover);
+            element.ready(el);
+            dialog.cover = cover;
+            return el;
+        };
+
+        open = function (fromQueue) {
+            var item = queue[0],
+                onTransitionEnd;
+
+            isOpen = true;
+
+            onTransitionEnd = function (event) {
+                event.stopPropagation();
+                setFocus();
+                Alertify.off(this, transition.type, onTransitionEnd);
+            };
+
+            if (transition.supported && !fromQueue) {
+                Alertify.on(dialog.el, transition.type, onTransitionEnd);
+            }
+            dialog.el.innerHTML    = build(item);
+            dialog.cover.className = clsCoverShow;
+            dialog.el.className    = clsElShow;
+
+            controls.reset  = Alertify.get("alertify-resetFocus");
+            controls.ok     = Alertify.get("alertify-ok")     || undefined;
+            controls.cancel = Alertify.get("alertify-cancel") || undefined;
+            controls.focus  = (dialog.buttonFocus === "cancel" && controls.cancel) ? controls.cancel : ((dialog.buttonFocus === "none") ? Alertify.get("alertify-noneFocus") : controls.ok),
+            controls.input  = Alertify.get("alertify-text")   || undefined;
+            controls.form   = Alertify.get("alertify-form")   || undefined;
+
+            if (typeof item.placeholder === "string" && item.placeholder !== "") {
+                controls.input.value = item.placeholder;
+            }
+
+            if (fromQueue) {
+                setFocus();
+            }
+            addListeners(item);
+        };
+
+        /**
+         * Remove Event Listeners
+         *
+         * @return {undefined}
+         */
+        removeListeners = function () {
+            Alertify.off(document.body, "keyup", onKeyUp);
+            Alertify.off(controls.reset, "focus", onBtnResetFocus);
+            if (controls.input) {
+                Alertify.off(controls.form, "submit", onFormSubmit);
+            }
+            if (controls.ok) {
+                Alertify.off(controls.ok, "click", onBtnOK);
+            }
+            if (controls.cancel) {
+                Alertify.off(controls.cancel, "click", onBtnCancel);
+            }
+        };
+
+        /**
+         * Set Focus
+         * Set focus to proper element
+         *
+         * @return {undefined}
+         */
+        setFocus = function () {
+            if (controls.input) {
+                controls.input.focus();
+                controls.input.select();
+            } else {
+                controls.focus.focus();
+            }
+        };
+
+        /**
+         * Setup Dialog
+         *
+         * @param  {String} type        Dialog type
+         * @param  {String} msg         Dialog message
+         * @param  {Function} accept    [Optional] Accept callback
+         * @param  {Function} deny      [Optional] Deny callback
+         * @param  {String} placeholder [Optional] Input placeholder text
+         * @return {undefined}
+         */
+        setup = function (type, msg, accept, deny, placeholder) {
+            if (!validate.isString(type)          ||
+                !validate.isString(msg)           ||
+                !validate.isFunction(accept,true) ||
+                !validate.isFunction(deny,true)   ||
+                !validate.isString(placeholder, true)) {
+                throw new Error(validate.messages.invalidArguments);
+            }
+            dialog.el = dialog.el || init();
+            elCallee = document.activeElement;
+
+            queue.push({
+                type        : type,
+                message     : msg,
+                accept      : accept,
+                deny        : deny,
+                placeholder : placeholder
+            });
+
+            if (!isOpen) {
+                open();
+            }
+        };
+
+        return {
+            buttonFocus   : "ok",
+            buttonReverse : false,
+            cover         : undefined,
+            el            : undefined,
+            labels: {
+                ok: "OK",
+                cancel: "Cancel"
+            },
+            alert: function (msg, accept) {
+                dialog = this;
+                setup("alert", msg, accept);
+                return this;
+            },
+            confirm: function (msg, accept, deny) {
+                dialog = this;
+                setup("confirm", msg, accept, deny);
+                return this;
+            },
+            prompt: function (msg, accept, deny, placeholder) {
+                dialog = this;
+                setup("prompt", msg, accept, deny, placeholder);
+                return this;
+            }
+        };
+    };
+
+    return new Dialog();
+}());
+var Log = (function () {
+    
+
+    var Log,
+        onTransitionEnd,
+        remove,
+        startTimer,
+        prefix  = Alertify._prefix + "-log",
+        clsShow = prefix + " is-" + prefix + "-showing",
+        clsHide = prefix + " is-" + prefix + "-hidden";
+
+    /**
+     * Log Method
+     *
+     * @param {Object} parent HTML DOM to insert log message into
+     * @param {String} type   Log type
+     * @param {String} msg    Log message
+     * @param {Number} delay  [Optional] Delay in ms
+     */
+    Log = function (parent, type, msg, delay) {
+        if (!validate.isObject(parent) ||
+            !validate.isString(type) ||
+            !validate.isString(msg) ||
+            !validate.isNumber(delay, true)) {
+            throw new Error(validate.messages.invalidArguments);
+        }
+
+        this.delay  = (typeof delay !== "undefined") ? delay : 5000;
+        this.msg    = msg;
+        this.parent = parent;
+        this.type   = type;
+        this.create();
+        this.show();
+    };
+
+    /**
+     * Transition End
+     * Handle CSS transition end
+     *
+     * @param  {Event} event Event
+     * @return {undefined}
+     */
+    onTransitionEnd = function (event) {
+        event.stopPropagation();
+        if (typeof this.el !== "undefined") {
+            Alertify.off(this.el, transition.type, this.fn);
+            remove.call(this);
+        }
+    };
+
+    /**
+     * Remove
+     * Remove the element from the DOM
+     *
+     * @return {undefined}
+     */
+    remove = function () {
+        this.parent.removeChild(this.el);
+        delete this.el;
+    };
+
+    /**
+     * StartTimer
+     *
+     * @return {undefined}
+     */
+    startTimer = function () {
+        var that = this;
+        if (this.delay !== 0) {
+            setTimeout(function () {
+                that.close();
+            }, this.delay);
+        }
+    };
+
+    /**
+     * Close
+     * Prepare the log element to be removed.
+     * Set an event listener for transition complete
+     * or call the remove directly
+     *
+     * @return {undefined}
+     */
+    Log.prototype.close = function () {
+        var that = this;
+        if (typeof this.el !== "undefined" && this.el.parentNode === this.parent) {
+            if (transition.supported) {
+                this.fn = function (event) {
+                    onTransitionEnd.call(that, event);
+                };
+                Alertify.on(this.el, transition.type, this.fn);
+                this.el.className = clsHide + " " + prefix + "-" + this.type;
+            } else {
+                remove.call(this);
+            }
+        }
+    };
+
+    /**
+     * Create
+     * Create a new log element and
+     * append it to the parent
+     *
+     * @return {undefined}
+     */
+    Log.prototype.create = function () {
+        if (typeof this.el === "undefined") {
+            var el = element.create("article", {
+                classes: clsHide + " " + prefix + "-" + this.type
+            });
+            el.innerHTML = this.msg;
+            this.parent.appendChild(el);
+            element.ready(el);
+            this.el = el;
+        }
+    };
+
+    /**
+     * Show
+     * Show new log element and bind click listener
+     *
+     * @return {undefined}
+     */
+    Log.prototype.show = function () {
+        var that = this;
+        if (typeof this.el === "undefined") {
+            return;
+        }
+        Alertify.on(this.el, "click", function () {
+            that.close();
+        });
+        this.el.className = clsShow + " " + prefix + "-" + this.type;
+        startTimer.call(this);
+    };
+
+    return Log;
+}());
+var logs = (function () {
+    
+
+    var init,
+        createLog,
+        validateParams,
+        logs;
+
+    /**
+     * Init Method
+     * Create the log holder element
+     *
+     * @return {Object} Log holder element
+     */
+    init = function () {
+        var el = element.create("section", { classes: Alertify._prefix + "-logs" });
+        document.body.appendChild(el);
+        element.ready(el);
+        return el;
+    };
+
+    /**
+     * Create Log
+     *
+     * @param  {String} type  Log type
+     * @param  {String} msg   Log message
+     * @param  {Number} delay [Optional] Delay in ms
+     * @return {Object}
+     */
+    createLog = function (type, msg, delay) {
+        validateParams(type, msg, delay);
+        this.el = this.el || init();
+        return new Log(this.el, type, msg, delay);
+    };
+
+    /**
+     * Validate Parameters
+     *
+     * @param  {String} type  Log type
+     * @param  {String} msg   Log message
+     * @param  {Number} delay [Optional] Delay in ms
+     * @return {undefined}
+     */
+    validateParams = function (type, msg, delay) {
+        if (!validate.isString(type) ||
+            !validate.isString(msg) ||
+            !validate.isNumber(delay, true)) {
+            throw new Error(validate.messages.invalidArguments);
+        }
+    };
+
+    /**
+     * Logs API
+     *
+     * @type {Object}
+     */
+    logs = {
+        delay : 5000,
+        el    : undefined,
+        create: function (type, msg, delay) {
+            return createLog.call(this, type, msg, delay);
+        },
+        error: function (msg, delay) {
+            return createLog.call(this, "error", msg, delay);
+        },
+        info: function (msg, delay) {
+            return createLog.call(this, "info", msg, delay);
+        },
+        success: function (msg, delay) {
+            return createLog.call(this, "success", msg, delay);
+        }
+    };
+
+    return logs;
+}());
+
+    Alertify.dialog = Dialog;
+    Alertify.log    = logs;
+    window.Alertify = Alertify;
+
+
+})(this, document);
 /*
  * Foundation Responsive Library 4.0.0
  * http://foundation.zurb.com
@@ -12598,7 +13448,7 @@ return __p;
 };
 (function (root, factory) {if (typeof exports === 'object') {module.exports = factory(); } else if (typeof define === 'function' && define.amd) {define([],factory); } else { root.garden_menu_widget_extra_css = factory();} }(this, function () {  
 
-return '\n.dashboard-topbar *,.dashboard-topbar \n*:before,.dashboard-topbar \n*:after {\n  -moz-box-sizing: border-box;\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box; }\n\n.dashboard-topbar html,.dashboard-topbar \nbody {\n  font-size: 16px; }\n\n.dashboard-topbar body {\n  background: white;\n  color: #222222;\n  padding: 0;\n  margin: 0;\n  font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;\n  font-weight: normal;\n  font-style: normal;\n  line-height: 1;\n  position: relative;\n  -webkit-font-smoothing: antialiased; }\n\n.dashboard-topbar img,.dashboard-topbar \nobject,.dashboard-topbar \nembed {\n  max-width: 100%;\n  height: auto; }\n\n.dashboard-topbar object,.dashboard-topbar \nembed {\n  height: 100%; }\n\n.dashboard-topbar img {\n  -ms-interpolation-mode: bicubic; }\n\n.dashboard-topbar #map_canvas img,.dashboard-topbar \n#map_canvas embed,.dashboard-topbar \n#map_canvas object,.dashboard-topbar \n.map_canvas img,.dashboard-topbar \n.map_canvas embed,.dashboard-topbar \n.map_canvas object {\n  max-width: none !important; }\n\n.dashboard-topbar .left {\n  float: left; }\n\n.dashboard-topbar .right {\n  float: right; }\n\n.dashboard-topbar .text-left {\n  text-align: left; }\n\n.dashboard-topbar .text-right {\n  text-align: right; }\n\n.dashboard-topbar .text-center {\n  text-align: center; }\n\n.dashboard-topbar .text-justify {\n  text-align: justify; }\n\n.dashboard-topbar .hide {\n  display: none; }\n\n.dashboard-topbar img {\n  display: block; }\n\n.dashboard-topbar textarea {\n  height: auto;\n  min-height: 50px; }\n\n.dashboard-topbar select {\n  width: 100%; }\n\n/* Wrapped around .top-bar to contain to grid width */\n.dashboard-topbar .contain-to-grid {\n  width: 100%;\n  background: #111111; }\n\n.dashboard-topbar .fixed {\n  width: 100%;\n  left: 0;\n  position: fixed;\n  top: 0;\n  z-index: 99; }\n\n.dashboard-topbar .top-bar {\n  overflow: hidden;\n  height: 45px;\n  line-height: 45px;\n  position: relative;\n  background: #111111; }\n  .dashboard-topbar .top-bar ul {\n    margin-bottom: 0;\n    list-style: none; }\n  .dashboard-topbar .top-bar .row {\n    max-width: none; }\n  .dashboard-topbar .top-bar form,.dashboard-topbar \n  .top-bar input {\n    margin-bottom: 0; }\n  .dashboard-topbar .top-bar input {\n    height: 2.45em; }\n  .dashboard-topbar .top-bar .button {\n    padding-top: .5em;\n    padding-bottom: .5em;\n    margin-bottom: 0; }\n  .dashboard-topbar .top-bar .title-area {\n    position: relative; }\n  .dashboard-topbar .top-bar .name {\n    height: 45px;\n    margin: 0;\n    font-size: 16px; }\n    .dashboard-topbar .top-bar .name h1 {\n      line-height: 45px;\n      font-size: 1.0625em;\n      margin: 0; }\n      .dashboard-topbar .top-bar .name h1 a {\n        font-weight: bold;\n        color: white;\n        width: 50%;\n        display: block;\n        padding: 0 15px; }\n  .dashboard-topbar .top-bar .toggle-topbar {\n    position: absolute;\n    right: 0;\n    top: 0; }\n    .dashboard-topbar .top-bar .toggle-topbar a {\n      color: white;\n      text-transform: uppercase;\n      font-size: 0.8125em;\n      font-weight: bold;\n      position: relative;\n      display: block;\n      padding: 0 15px;\n      height: 45px;\n      line-height: 45px; }\n    .dashboard-topbar .top-bar .toggle-topbar.menu-icon {\n      right: 15px;\n      top: 50%;\n      margin-top: -16px;\n      padding-left: 40px; }\n      .dashboard-topbar .top-bar .toggle-topbar.menu-icon a {\n        text-indent: -48px;\n        width: 34px;\n        height: 34px;\n        line-height: 33px;\n        padding: 0;\n        color: white; }\n        .dashboard-topbar .top-bar .toggle-topbar.menu-icon a span {\n          position: absolute;\n          right: 0;\n          display: block;\n          width: 16px;\n          height: 0;\n          -webkit-box-shadow: 0 10px 0 1px white, 0 16px 0 1px white, 0 22px 0 1px white;\n          box-shadow: 0 10px 0 1px white, 0 16px 0 1px white, 0 22px 0 1px white; }\n  .dashboard-topbar .top-bar.expanded {\n    height: auto;\n    background: transparent; }\n    .dashboard-topbar .top-bar.expanded .title-area {\n      background: #111111; }\n    .dashboard-topbar .top-bar.expanded .toggle-topbar a {\n      color: #888888; }\n      .dashboard-topbar .top-bar.expanded .toggle-topbar a span {\n        -webkit-box-shadow: 0 10px 0 1px #888888, 0 16px 0 1px #888888, 0 22px 0 1px #888888;\n        box-shadow: 0 10px 0 1px #888888, 0 16px 0 1px #888888, 0 22px 0 1px #888888; }\n\n.dashboard-topbar .top-bar-section {\n  left: 0;\n  position: relative;\n  width: auto;\n  -webkit-transition: left 300ms ease-out;\n  -moz-transition: left 300ms ease-out;\n  transition: left 300ms ease-out; }\n  .dashboard-topbar .top-bar-section ul {\n    width: 100%;\n    height: auto;\n    display: block;\n    background: #333333;\n    font-size: 16px;\n    margin: 0; }\n  .dashboard-topbar .top-bar-section .divider {\n    border-bottom: solid 1px #4d4d4d;\n    border-top: solid 1px #1a1a1a;\n    clear: both;\n    height: 1px;\n    width: 100%; }\n  .dashboard-topbar .top-bar-section ul li > a {\n    display: block;\n    width: 100%;\n    padding: 12px 0 12px 15px;\n    color: white;\n    font-size: 0.8125em;\n    font-weight: bold;\n    background: #333333; }\n    .dashboard-topbar .top-bar-section ul li > a:hover {\n      background: #2b2b2b; }\n    .dashboard-topbar .top-bar-section ul li > a.button {\n      background: #2ba6cb;\n      font-size: 0.8125em; }\n      .dashboard-topbar .top-bar-section ul li > a.button:hover {\n        background: #2284a1; }\n    .dashboard-topbar .top-bar-section ul li > a.button.secondary {\n      background: #e9e9e9; }\n      .dashboard-topbar .top-bar-section ul li > a.button.secondary:hover {\n        background: #d0d0d0; }\n    .dashboard-topbar .top-bar-section ul li > a.button.success {\n      background: #5da423; }\n      .dashboard-topbar .top-bar-section ul li > a.button.success:hover {\n        background: #457a1a; }\n    .dashboard-topbar .top-bar-section ul li > a.button.alert {\n      background: #c60f13; }\n      .dashboard-topbar .top-bar-section ul li > a.button.alert:hover {\n        background: #970b0e; }\n  .dashboard-topbar .top-bar-section ul li.active a {\n    background: #2b2b2b; }\n  .dashboard-topbar .top-bar-section .has-form {\n    padding: 15px; }\n  .dashboard-topbar .top-bar-section .has-dropdown {\n    position: relative; }\n    .dashboard-topbar .top-bar-section .has-dropdown > a:after {\n      content: "";\n      display: block;\n      width: 0;\n      height: 0;\n      border: solid 5px;\n      border-color: transparent transparent transparent rgba(255, 255, 255, 0.5);\n      margin-right: 15px;\n      margin-top: -4.5px;\n      position: absolute;\n      top: 50%;\n      right: 0; }\n    .dashboard-topbar .top-bar-section .has-dropdown.moved {\n      position: static; }\n      .dashboard-topbar .top-bar-section .has-dropdown.moved > .dropdown {\n        visibility: visible; }\n  .dashboard-topbar .top-bar-section .dropdown {\n    position: absolute;\n    left: 100%;\n    top: 0;\n    visibility: hidden;\n    z-index: 99; }\n    .dashboard-topbar .top-bar-section .dropdown li {\n      width: 100%; }\n      .dashboard-topbar .top-bar-section .dropdown li a {\n        font-weight: normal;\n        padding: 8px 15px; }\n    .dashboard-topbar .top-bar-section .dropdown label {\n      padding: 8px 15px 2px;\n      margin-bottom: 0;\n      text-transform: uppercase;\n      color: #555;\n      font-weight: bold;\n      font-size: 0.625em; }\n\n.dashboard-topbar .top-bar-js-breakpoint {\n  width: 58.75em !important;\n  visibility: hidden; }\n\n.dashboard-topbar .js-generated {\n  display: block; }\n\n@media only screen and (min-width: 58.75em) {\n  .dashboard-topbar .top-bar {\n    background: #111111;\n    *zoom: 1;\n    overflow: visible; }.dashboard-topbar \n    .top-bar:before,.dashboard-topbar  .top-bar:after {\n      content: " ";\n      display: table; }.dashboard-topbar \n    .top-bar:after {\n      clear: both; }.dashboard-topbar \n    .top-bar .toggle-topbar {\n      display: none; }.dashboard-topbar \n    .top-bar .title-area {\n      float: left; }.dashboard-topbar \n    .top-bar .name h1 a {\n      width: auto; }.dashboard-topbar \n    .top-bar input,.dashboard-topbar \n    .top-bar .button {\n      line-height: 2em;\n      font-size: 0.875em;\n      height: 2em;\n      padding: 0 10px;\n      position: relative;\n      top: 8px; }.dashboard-topbar \n    .top-bar.expanded {\n      background: #111111; }.dashboard-topbar \n\n  .contain-to-grid .top-bar {\n    max-width: 62.5em;\n    margin: 0 auto; }.dashboard-topbar \n\n  .top-bar-section {\n    -webkit-transition: none 0 0;\n    -moz-transition: none 0 0;\n    transition: none 0 0;\n    left: 0 !important; }.dashboard-topbar \n    .top-bar-section ul {\n      width: auto;\n      height: auto !important;\n      display: inline; }.dashboard-topbar \n      .top-bar-section ul li {\n        float: left; }.dashboard-topbar \n        .top-bar-section ul li .js-generated {\n          display: none; }.dashboard-topbar \n    .top-bar-section li a:not(.button) {\n      padding: 0 15px;\n      line-height: 45px;\n      background: #111111; }.dashboard-topbar \n      .top-bar-section li a:not(.button):hover {\n        background: #2b2b2b; }.dashboard-topbar \n    .top-bar-section .has-dropdown > a {\n      padding-right: 35px !important; }.dashboard-topbar \n      .top-bar-section .has-dropdown > a:after {\n        content: "";\n        display: block;\n        width: 0;\n        height: 0;\n        border: solid 5px;\n        border-color: rgba(255, 255, 255, 0.5) transparent transparent transparent;\n        margin-top: -2.5px; }.dashboard-topbar \n    .top-bar-section .has-dropdown.moved {\n      position: relative; }.dashboard-topbar \n      .top-bar-section .has-dropdown.moved > .dropdown {\n        visibility: hidden; }.dashboard-topbar \n    .top-bar-section .has-dropdown:hover > .dropdown,.dashboard-topbar  .top-bar-section .has-dropdown:active > .dropdown {\n      visibility: visible; }.dashboard-topbar \n    .top-bar-section .has-dropdown .dropdown li.has-dropdown > a:after {\n      border: none;\n      content: "\\00bb";\n      margin-top: -7px;\n      right: 5px; }.dashboard-topbar \n    .top-bar-section .dropdown {\n      left: 0;\n      top: auto;\n      background: transparent; }.dashboard-topbar \n      .top-bar-section .dropdown li a {\n        line-height: 1;\n        white-space: nowrap;\n        padding: 7px 15px;\n        background: #1e1e1e; }.dashboard-topbar \n      .top-bar-section .dropdown li label {\n        white-space: nowrap;\n        background: #1e1e1e; }.dashboard-topbar \n      .top-bar-section .dropdown li .dropdown {\n        left: 100%;\n        top: 0; }.dashboard-topbar \n    .top-bar-section > ul > .divider {\n      border-bottom: none;\n      border-top: none;\n      border-right: solid 1px #2b2b2b;\n      border-left: solid 1px black;\n      clear: none;\n      height: 45px;\n      width: 0px; }.dashboard-topbar \n    .top-bar-section .has-form {\n      background: #111111;\n      padding: 0 15px;\n      height: 45px; }.dashboard-topbar \n    .top-bar-section ul.right li .dropdown {\n      left: auto;\n      right: 0; }.dashboard-topbar \n      .top-bar-section ul.right li .dropdown li .dropdown {\n        right: 100%; } }\n\n/*!\n * qTip2 - Pretty powerful tooltips - v2.0.1-25-\n * http://qtip2.com\n *\n * Copyright (c) 2013 Craig Michael Thompson\n * Released under the MIT, GPL licenses\n * http://jquery.org/license\n *\n * Date: Wed Feb 20 2013 11:04 GMT+0000\n * Plugins: svg ajax tips modal viewport imagemap ie6\n * Styles: basic css3\n */\n\n/* Core qTip styles */\n.qtip, .qtip{\n\tposition: absolute;\n\tleft: -28000px;\n\ttop: -28000px;\n\tdisplay: none;\n\n\tmax-width: 280px;\n\tmin-width: 50px;\n\t\n\tfont-size: 10.5px;\n\tline-height: 12px;\n\n\tdirection: ltr;\n}\n\n\t.qtip-content{\n\t\tposition: relative;\n\t\tpadding: 5px 9px;\n\t\toverflow: hidden;\n\n\t\ttext-align: left;\n\t\tword-wrap: break-word;\n\t}\n\n\t.qtip-titlebar{\n\t\tposition: relative;\n\t\tpadding: 5px 35px 5px 10px;\n\t\toverflow: hidden;\n\n\t\tborder-width: 0 0 1px;\n\t\tfont-weight: bold;\n\t}\n\n\t.qtip-titlebar + .qtip-content{ border-top-width: 0 !important; }\n\n\t/* Default close button class */\n\t.qtip-close{\n\t\tposition: absolute;\n\t\tright: -9px; top: -9px;\n\n\t\tcursor: pointer;\n\t\toutline: medium none;\n\n\t\tborder-width: 1px;\n\t\tborder-style: solid;\n\t\tborder-color: transparent;\n\t}\n\n\t\t.qtip-titlebar .qtip-close{\n\t\t\tright: 4px; top: 50%;\n\t\t\tmargin-top: -9px;\n\t\t}\n\t\n\t\t* html .qtip-titlebar .qtip-close{ top: 16px; } /* IE fix */\n\n\t\t.qtip-titlebar .ui-icon,\n\t\t.qtip-icon .ui-icon{\n\t\t\tdisplay: block;\n\t\t\ttext-indent: -1000em;\n\t\t\tdirection: ltr;\n\t\t\tvertical-align: middle;\n\t\t}\n\n\t\t.qtip-icon, .qtip-icon .ui-icon{\n\t\t\t-moz-border-radius: 3px;\n\t\t\t-webkit-border-radius: 3px;\n\t\t\tborder-radius: 3px;\n\t\t\ttext-decoration: none;\n\t\t}\n\n\t\t\t.qtip-icon .ui-icon{\n\t\t\t\twidth: 18px;\n\t\t\t\theight: 14px;\n\n\t\t\t\ttext-align: center;\n\t\t\t\ttext-indent: 0;\n\t\t\t\tfont: normal bold 10px/13px Tahoma,sans-serif;\n\n\t\t\t\tcolor: inherit;\n\t\t\t\tbackground: transparent none no-repeat -100em -100em;\n\t\t\t}\n\n\n/* Applied to \'focused\' tooltips e.g. most recently displayed/interacted with */\n.qtip-focus{}\n\n/* Applied on hover of tooltips i.e. added/removed on mouseenter/mouseleave respectively */\n.qtip-hover{}\n\n/* Default tooltip style */\n.qtip-default{\n\tborder-width: 1px;\n\tborder-style: solid;\n\tborder-color: #F1D031;\n\n\tbackground-color: #FFFFA3;\n\tcolor: #555;\n}\n\n\t.qtip-default .qtip-titlebar{\n\t\tbackground-color: #FFEF93;\n\t}\n\n\t.qtip-default .qtip-icon{\n\t\tborder-color: #CCC;\n\t\tbackground: #F1F1F1;\n\t\tcolor: #777;\n\t}\n\t\n\t.qtip-default .qtip-titlebar .qtip-close{\n\t\tborder-color: #AAA;\n\t\tcolor: #111;\n\t}\n\n\n/*! Light tooltip style */\n.qtip-light{\n\tbackground-color: white;\n\tborder-color: #E2E2E2;\n\tcolor: #454545;\n}\n\n\t.qtip-light .qtip-titlebar{\n\t\tbackground-color: #f1f1f1;\n\t}\n\n\n/*! Dark tooltip style */\n.qtip-dark{\n\tbackground-color: #505050;\n\tborder-color: #303030;\n\tcolor: #f3f3f3;\n}\n\n\t.qtip-dark .qtip-titlebar{\n\t\tbackground-color: #404040;\n\t}\n\n\t.qtip-dark .qtip-icon{\n\t\tborder-color: #444;\n\t}\n\n\t.qtip-dark .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #303030;\n\t}\n\n\n/*! Cream tooltip style */\n.qtip-cream{\n\tbackground-color: #FBF7AA;\n\tborder-color: #F9E98E;\n\tcolor: #A27D35;\n}\n\n\t.qtip-cream .qtip-titlebar{\n\t\tbackground-color: #F0DE7D;\n\t}\n\n\t.qtip-cream .qtip-close .qtip-icon{\n\t\tbackground-position: -82px 0;\n\t}\n\n\n/*! Red tooltip style */\n.qtip-red{\n\tbackground-color: #F78B83;\n\tborder-color: #D95252;\n\tcolor: #912323;\n}\n\n\t.qtip-red .qtip-titlebar{\n\t\tbackground-color: #F06D65;\n\t}\n\n\t.qtip-red .qtip-close .qtip-icon{\n\t\tbackground-position: -102px 0;\n\t}\n\n\t.qtip-red .qtip-icon{\n\t\tborder-color: #D95252;\n\t}\n\n\t.qtip-red .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #D95252;\n\t}\n\n\n/*! Green tooltip style */\n.qtip-green{\n\tbackground-color: #CAED9E;\n\tborder-color: #90D93F;\n\tcolor: #3F6219;\n}\n\n\t.qtip-green .qtip-titlebar{\n\t\tbackground-color: #B0DE78;\n\t}\n\n\t.qtip-green .qtip-close .qtip-icon{\n\t\tbackground-position: -42px 0;\n\t}\n\n\n/*! Blue tooltip style */\n.qtip-blue{\n\tbackground-color: #E5F6FE;\n\tborder-color: #ADD9ED;\n\tcolor: #5E99BD;\n}\n\n\t.qtip-blue .qtip-titlebar{\n\t\tbackground-color: #D0E9F5;\n\t}\n\n\t.qtip-blue .qtip-close .qtip-icon{\n\t\tbackground-position: -2px 0;\n\t}\n\n\n/* Add shadows to your tooltips in: FF3+, Chrome 2+, Opera 10.6+, IE9+, Safari 2+ */\n.qtip-shadow{\n\t-webkit-box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.15);\n\t-moz-box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.15);\n\tbox-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.15);\n}\n\n/* Add rounded corners to your tooltips in: FF3+, Chrome 2+, Opera 10.6+, IE9+, Safari 2+ */\n.qtip-rounded,\n.qtip-tipsy,\n.qtip-bootstrap{\n\t-moz-border-radius: 5px;\n\t-webkit-border-radius: 5px;\n\tborder-radius: 5px;\n}\n\n.qtip-rounded .qtip-titlebar{\n\t-moz-border-radius: 5px 5px 0 0;\n\t-webkit-border-radius: 5px 5px 0 0;\n\tborder-radius: 5px 5px 0 0;\n}\n\n/* Youtube tooltip style */\n.qtip-youtube{\n\t-moz-border-radius: 2px;\n\t-webkit-border-radius: 2px;\n\tborder-radius: 2px;\n\t\n\t-webkit-box-shadow: 0 0 3px #333;\n\t-moz-box-shadow: 0 0 3px #333;\n\tbox-shadow: 0 0 3px #333;\n\n\tcolor: white;\n\tborder-width: 0;\n\n\tbackground: #4A4A4A;\n\tbackground-image: -webkit-gradient(linear,left top,left bottom,color-stop(0,#4A4A4A),color-stop(100%,black));\n\tbackground-image: -webkit-linear-gradient(top,#4A4A4A 0,black 100%);\n\tbackground-image: -moz-linear-gradient(top,#4A4A4A 0,black 100%);\n\tbackground-image: -ms-linear-gradient(top,#4A4A4A 0,black 100%);\n\tbackground-image: -o-linear-gradient(top,#4A4A4A 0,black 100%);\n}\n\n\t.qtip-youtube .qtip-titlebar{\n\t\tbackground-color: #4A4A4A;\n\t\tbackground-color: rgba(0,0,0,0);\n\t}\n\t\n\t.qtip-youtube .qtip-content{\n\t\tpadding: .75em;\n\t\tfont: 12px arial,sans-serif;\n\t\t\n\t\tfilter: progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr=#4a4a4a,EndColorStr=#000000);\n\t\t-ms-filter: "progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr=#4a4a4a,EndColorStr=#000000);";\n\t}\n\n\t.qtip-youtube .qtip-icon{\n\t\tborder-color: #222;\n\t}\n\n\t.qtip-youtube .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #303030;\n\t}\n\n\n/* jQuery TOOLS Tooltip style */\n.qtip-jtools{\n\tbackground: #232323;\n\tbackground: rgba(0, 0, 0, 0.7);\n\tbackground-image: -webkit-gradient(linear, left top, left bottom, from(#717171), to(#232323));\n\tbackground-image: -moz-linear-gradient(top, #717171, #232323);\n\tbackground-image: -webkit-linear-gradient(top, #717171, #232323);\n\tbackground-image: -ms-linear-gradient(top, #717171, #232323);\n\tbackground-image: -o-linear-gradient(top, #717171, #232323);\n\n\tborder: 2px solid #ddd;\n\tborder: 2px solid rgba(241,241,241,1);\n\n\t-moz-border-radius: 2px;\n\t-webkit-border-radius: 2px;\n\tborder-radius: 2px;\n\n\t-webkit-box-shadow: 0 0 12px #333;\n\t-moz-box-shadow: 0 0 12px #333;\n\tbox-shadow: 0 0 12px #333;\n}\n\n\t/* IE Specific */\n\t.qtip-jtools .qtip-titlebar{\n\t\tbackground-color: transparent;\n\t\tfilter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#717171,endColorstr=#4A4A4A);\n\t\t-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#717171,endColorstr=#4A4A4A)";\n\t}\n\t.qtip-jtools .qtip-content{\n\t\tfilter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#4A4A4A,endColorstr=#232323);\n\t\t-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#4A4A4A,endColorstr=#232323)";\n\t}\n\n\t.qtip-jtools .qtip-titlebar,\n\t.qtip-jtools .qtip-content{\n\t\tbackground: transparent;\n\t\tcolor: white;\n\t\tborder: 0 dashed transparent;\n\t}\n\n\t.qtip-jtools .qtip-icon{\n\t\tborder-color: #555;\n\t}\n\n\t.qtip-jtools .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #333;\n\t}\n\n\n/* Cluetip style */\n.qtip-cluetip{\n\t-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);\n\t-moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);\n\tbox-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);\n\n\tbackground-color: #D9D9C2;\n\tcolor: #111;\n\tborder: 0 dashed transparent;\n}\n\n\t.qtip-cluetip .qtip-titlebar{\n\t\tbackground-color: #87876A;\n\t\tcolor: white;\n\t\tborder: 0 dashed transparent;\n\t}\n\t\n\t.qtip-cluetip .qtip-icon{\n\t\tborder-color: #808064;\n\t}\n\t\n\t.qtip-cluetip .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #696952;\n\t\tcolor: #696952;\n\t}\n\n\n/* Tipsy style */\n.qtip-tipsy{\n\tbackground: black;\n\tbackground: rgba(0, 0, 0, .87);\n\n\tcolor: white;\n\tborder: 0 solid transparent;\n\n\tfont-size: 11px;\n\tfont-family: \'Lucida Grande\', sans-serif;\n\tfont-weight: bold;\n\tline-height: 16px;\n\ttext-shadow: 0 1px black;\n}\n\n\t.qtip-tipsy .qtip-titlebar{\n\t\tpadding: 6px 35px 0 10;\n\t\tbackground-color: transparent;\n\t}\n\n\t.qtip-tipsy .qtip-content{\n\t\tpadding: 6px 10;\n\t}\n\t\n\t.qtip-tipsy .qtip-icon{\n\t\tborder-color: #222;\n\t\ttext-shadow: none;\n\t}\n\n\t.qtip-tipsy .qtip-titlebar .ui-state-hover{\n\t\tborder-color: #303030;\n\t}\n\n\n/* Tipped style */\n.qtip-tipped{\n\tborder: 3px solid #959FA9;\n\n\t-moz-border-radius: 3px;\n\t-webkit-border-radius: 3px;\n\tborder-radius: 3px;\n\n\tbackground-color: #F9F9F9;\n\tcolor: #454545;\n\n\tfont-weight: normal;\n\tfont-family: serif;\n}\n\n\t.qtip-tipped .qtip-titlebar{\n\t\tborder-bottom-width: 0;\n\n\t\tcolor: white;\n\t\tbackground: #3A79B8;\n\t\tbackground-image: -webkit-gradient(linear, left top, left bottom, from(#3A79B8), to(#2E629D));\n\t\tbackground-image: -webkit-linear-gradient(top, #3A79B8, #2E629D);\n\t\tbackground-image: -moz-linear-gradient(top, #3A79B8, #2E629D);\n\t\tbackground-image: -ms-linear-gradient(top, #3A79B8, #2E629D);\n\t\tbackground-image: -o-linear-gradient(top, #3A79B8, #2E629D);\n\t\tfilter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3A79B8,endColorstr=#2E629D);\n\t\t-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#3A79B8,endColorstr=#2E629D)";\n\t}\n\n\t.qtip-tipped .qtip-icon{\n\t\tborder: 2px solid #285589;\n\t\tbackground: #285589;\n\t}\n\n\t\t.qtip-tipped .qtip-icon .ui-icon{\n\t\t\tbackground-color: #FBFBFB;\n\t\t\tcolor: #555;\n\t\t}\n\n\n/**\n * Twitter Bootstrap style.\n *\n * Tested with IE 8, IE 9, Chrome 18, Firefox 9, Opera 11.\n * Does not work with IE 7.\n */\n.qtip-bootstrap{\n\t/** Taken from Bootstrap body */\n\tfont-size: 14px;\n\tline-height: 20px;\n\tcolor: #333333;\n\n\t/** Taken from Bootstrap .popover */\n\tpadding: 1px;\n\tbackground-color: #ffffff;\n\tborder: 1px solid #ccc;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\t-webkit-border-radius: 6px;\n\t-moz-border-radius: 6px;\n\tborder-radius: 6px;\n\t-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);\n\t-moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);\n\tbox-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);\n\t-webkit-background-clip: padding-box;\n\t-moz-background-clip: padding;\n\tbackground-clip: padding-box;\n}\n\n\t.qtip-bootstrap .qtip-titlebar{\n\t\t/** Taken from Bootstrap .popover-title */\n\t\tpadding: 8px 14px;\n\t\tmargin: 0;\n\t\tfont-size: 14px;\n\t\tfont-weight: normal;\n\t\tline-height: 18px;\n\t\tbackground-color: #f7f7f7;\n\t\tborder-bottom: 1px solid #ebebeb;\n\t\t-webkit-border-radius: 5px 5px 0 0;\n\t\t-moz-border-radius: 5px 5px 0 0;\n\t\tborder-radius: 5px 5px 0 0;\n\t}\n\n\t\t.qtip-bootstrap .qtip-titlebar .qtip-close{\n\t\t\t/**\n\t\t\t * Overrides qTip2:\n\t\t\t * .qtip-titlebar .qtip-close{\n\t\t\t *   [...]\n\t\t\t *   right: 4px;\n\t\t\t *   top: 50%;\n\t\t\t *   [...]\n\t\t\t *   border-style: solid;\n\t\t\t * }\n\t\t\t */\n\t\t\tright: 11px;\n\t\t\ttop: 45%;\n\t\t\tborder-style: none;\n\t\t}\n\n\t.qtip-bootstrap .qtip-content{\n\t\t/** Taken from Bootstrap .popover-content */\n\t\tpadding: 9px 14px;\n\t}\n\n\t.qtip-bootstrap .qtip-icon{\n\t\t/**\n\t\t * Overrides qTip2:\n\t\t * .qtip-default .qtip-icon {\n\t\t *   border-color: #CCC;\n\t\t *   background: #F1F1F1;\n\t\t *   color: #777;\n\t\t * }\n\t\t */\n\t\tbackground: transparent;\n\t}\n\n\t\t.qtip-bootstrap .qtip-icon .ui-icon{\n\t\t\t/**\n\t\t\t * Overrides qTip2:\n\t\t\t * .qtip-icon .ui-icon{\n\t\t\t *   width: 18px;\n\t\t\t *   height: 14px;\n\t\t\t * }\n\t\t\t */\n\t\t\twidth: auto;\n\t\t\theight: auto;\n\n\t\t\t/* Taken from Bootstrap .close */\n\t\t\tfloat: right;\n\t\t\tfont-size: 20px;\n\t\t\tfont-weight: bold;\n\t\t\tline-height: 18px;\n\t\t\tcolor: #000000;\n\t\t\ttext-shadow: 0 1px 0 #ffffff;\n\t\t\topacity: 0.2;\n\t\t\tfilter: alpha(opacity=20);\n\t\t}\n\n\t\t.qtip-bootstrap .qtip-icon .ui-icon:hover{\n\t\t\t/* Taken from Bootstrap .close:hover */\n\t\t\tcolor: #000000;\n\t\t\ttext-decoration: none;\n\t\t\tcursor: pointer;\n\t\t\topacity: 0.4;\n\t\t\tfilter: alpha(opacity=40);\n\t\t}\n\n\n/* IE9 fix - removes all filters */\n.qtip:not(.ie9haxors) div.qtip-content,\n.qtip:not(.ie9haxors) div.qtip-titlebar{\n\tfilter: none;\n\t-ms-filter: none;\n}\n\n\n/* Tips plugin */\n.qtip .qtip-tip{\n\tmargin: 0 auto;\n\toverflow: hidden;\n\tz-index: 10;\n\t\n}\n\n\t/* Opera bug #357 - Incorrect tip position\n\thttps://github.com/Craga89/qTip2/issues/367 */\n\tx:-o-prefocus, .qtip .qtip-tip{\n\t\tvisibility: hidden;\n\t}\n\n\t.qtip .qtip-tip,\n\t.qtip .qtip-tip .qtip-vml,\n\t.qtip .qtip-tip canvas{\n\t\tposition: absolute;\n\n\t\tcolor: #123456;\n\t\tbackground: transparent;\n\t\tborder: 0 dashed transparent;\n\t}\n\t\n\t.qtip .qtip-tip canvas{ top: 0; left: 0; }\n\n\t.qtip .qtip-tip .qtip-vml{\n\t\tbehavior: url(#default#VML);\n\t\tdisplay: inline-block;\n\t\tvisibility: visible;\n\t}\n/* Modal plugin */\n#qtip-overlay{\n\tposition: fixed;\n\tleft: -10000em;\n\ttop: -10000em;\n}\n\n\t/* Applied to modals with show.modal.blur set to true */\n\t#qtip-overlay.blurs{ cursor: pointer; }\n\n\t/* Change opacity of overlay here */\n\t#qtip-overlay div{\n\t\tposition: absolute;\n\t\tleft: 0; top: 0;\n\t\twidth: 100%; height: 100%;\n\n\t\tbackground-color: black;\n\n\t\topacity: 0.7;\n\t\tfilter:alpha(opacity=70);\n\t\t-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";\n\t}\n\n\n/* IE6 Modal plugin fix */\n.qtipmodal-ie6fix{\n\tposition: absolute !important;\n}'
+return '\n.dashboard-topbar *,.dashboard-topbar \n*:before,.dashboard-topbar \n*:after {\n  -moz-box-sizing: border-box;\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box; }\n\n.dashboard-topbar html,.dashboard-topbar \nbody {\n  font-size: 16px; }\n\n.dashboard-topbar body {\n  background: white;\n  color: #222222;\n  padding: 0;\n  margin: 0;\n  font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;\n  font-weight: normal;\n  font-style: normal;\n  line-height: 1;\n  position: relative;\n  -webkit-font-smoothing: antialiased; }\n\n.dashboard-topbar img,.dashboard-topbar \nobject,.dashboard-topbar \nembed {\n  max-width: 100%;\n  height: auto; }\n\n.dashboard-topbar object,.dashboard-topbar \nembed {\n  height: 100%; }\n\n.dashboard-topbar img {\n  -ms-interpolation-mode: bicubic; }\n\n.dashboard-topbar #map_canvas img,.dashboard-topbar \n#map_canvas embed,.dashboard-topbar \n#map_canvas object,.dashboard-topbar \n.map_canvas img,.dashboard-topbar \n.map_canvas embed,.dashboard-topbar \n.map_canvas object {\n  max-width: none !important; }\n\n.dashboard-topbar .left {\n  float: left; }\n\n.dashboard-topbar .right {\n  float: right; }\n\n.dashboard-topbar .text-left {\n  text-align: left; }\n\n.dashboard-topbar .text-right {\n  text-align: right; }\n\n.dashboard-topbar .text-center {\n  text-align: center; }\n\n.dashboard-topbar .text-justify {\n  text-align: justify; }\n\n.dashboard-topbar .hide {\n  display: none; }\n\n.dashboard-topbar img {\n  display: block; }\n\n.dashboard-topbar textarea {\n  height: auto;\n  min-height: 50px; }\n\n.dashboard-topbar select {\n  width: 100%; }\n\n/* Wrapped around .top-bar to contain to grid width */\n.dashboard-topbar .contain-to-grid {\n  width: 100%;\n  background: #111111; }\n\n.dashboard-topbar .fixed {\n  width: 100%;\n  left: 0;\n  position: fixed;\n  top: 0;\n  z-index: 99; }\n\n.dashboard-topbar .top-bar {\n  overflow: hidden;\n  height: 45px;\n  line-height: 45px;\n  position: relative;\n  background: #111111; }\n  .dashboard-topbar .top-bar ul {\n    margin-bottom: 0;\n    list-style: none; }\n  .dashboard-topbar .top-bar .row {\n    max-width: none; }\n  .dashboard-topbar .top-bar form,.dashboard-topbar \n  .top-bar input {\n    margin-bottom: 0; }\n  .dashboard-topbar .top-bar input {\n    height: 2.45em; }\n  .dashboard-topbar .top-bar .button {\n    padding-top: .5em;\n    padding-bottom: .5em;\n    margin-bottom: 0; }\n  .dashboard-topbar .top-bar .title-area {\n    position: relative; }\n  .dashboard-topbar .top-bar .name {\n    height: 45px;\n    margin: 0;\n    font-size: 16px; }\n    .dashboard-topbar .top-bar .name h1 {\n      line-height: 45px;\n      font-size: 1.0625em;\n      margin: 0; }\n      .dashboard-topbar .top-bar .name h1 a {\n        font-weight: bold;\n        color: white;\n        width: 50%;\n        display: block;\n        padding: 0 15px; }\n  .dashboard-topbar .top-bar .toggle-topbar {\n    position: absolute;\n    right: 0;\n    top: 0; }\n    .dashboard-topbar .top-bar .toggle-topbar a {\n      color: white;\n      text-transform: uppercase;\n      font-size: 0.8125em;\n      font-weight: bold;\n      position: relative;\n      display: block;\n      padding: 0 15px;\n      height: 45px;\n      line-height: 45px; }\n    .dashboard-topbar .top-bar .toggle-topbar.menu-icon {\n      right: 15px;\n      top: 50%;\n      margin-top: -16px;\n      padding-left: 40px; }\n      .dashboard-topbar .top-bar .toggle-topbar.menu-icon a {\n        text-indent: -48px;\n        width: 34px;\n        height: 34px;\n        line-height: 33px;\n        padding: 0;\n        color: white; }\n        .dashboard-topbar .top-bar .toggle-topbar.menu-icon a span {\n          position: absolute;\n          right: 0;\n          display: block;\n          width: 16px;\n          height: 0;\n          -webkit-box-shadow: 0 10px 0 1px white, 0 16px 0 1px white, 0 22px 0 1px white;\n          box-shadow: 0 10px 0 1px white, 0 16px 0 1px white, 0 22px 0 1px white; }\n  .dashboard-topbar .top-bar.expanded {\n    height: auto;\n    background: transparent; }\n    .dashboard-topbar .top-bar.expanded .title-area {\n      background: #111111; }\n    .dashboard-topbar .top-bar.expanded .toggle-topbar a {\n      color: #888888; }\n      .dashboard-topbar .top-bar.expanded .toggle-topbar a span {\n        -webkit-box-shadow: 0 10px 0 1px #888888, 0 16px 0 1px #888888, 0 22px 0 1px #888888;\n        box-shadow: 0 10px 0 1px #888888, 0 16px 0 1px #888888, 0 22px 0 1px #888888; }\n\n.dashboard-topbar .top-bar-section {\n  left: 0;\n  position: relative;\n  width: auto;\n  -webkit-transition: left 300ms ease-out;\n  -moz-transition: left 300ms ease-out;\n  transition: left 300ms ease-out; }\n  .dashboard-topbar .top-bar-section ul {\n    width: 100%;\n    height: auto;\n    display: block;\n    background: #333333;\n    font-size: 16px;\n    margin: 0; }\n  .dashboard-topbar .top-bar-section .divider {\n    border-bottom: solid 1px #4d4d4d;\n    border-top: solid 1px #1a1a1a;\n    clear: both;\n    height: 1px;\n    width: 100%; }\n  .dashboard-topbar .top-bar-section ul li > a {\n    display: block;\n    width: 100%;\n    padding: 12px 0 12px 15px;\n    color: white;\n    font-size: 0.8125em;\n    font-weight: bold;\n    background: #333333; }\n    .dashboard-topbar .top-bar-section ul li > a:hover {\n      background: #2b2b2b; }\n    .dashboard-topbar .top-bar-section ul li > a.button {\n      background: #2ba6cb;\n      font-size: 0.8125em; }\n      .dashboard-topbar .top-bar-section ul li > a.button:hover {\n        background: #2284a1; }\n    .dashboard-topbar .top-bar-section ul li > a.button.secondary {\n      background: #e9e9e9; }\n      .dashboard-topbar .top-bar-section ul li > a.button.secondary:hover {\n        background: #d0d0d0; }\n    .dashboard-topbar .top-bar-section ul li > a.button.success {\n      background: #5da423; }\n      .dashboard-topbar .top-bar-section ul li > a.button.success:hover {\n        background: #457a1a; }\n    .dashboard-topbar .top-bar-section ul li > a.button.alert {\n      background: #c60f13; }\n      .dashboard-topbar .top-bar-section ul li > a.button.alert:hover {\n        background: #970b0e; }\n  .dashboard-topbar .top-bar-section ul li.active a {\n    background: #2b2b2b; }\n  .dashboard-topbar .top-bar-section .has-form {\n    padding: 15px; }\n  .dashboard-topbar .top-bar-section .has-dropdown {\n    position: relative; }\n    .dashboard-topbar .top-bar-section .has-dropdown > a:after {\n      content: "";\n      display: block;\n      width: 0;\n      height: 0;\n      border: solid 5px;\n      border-color: transparent transparent transparent rgba(255, 255, 255, 0.5);\n      margin-right: 15px;\n      margin-top: -4.5px;\n      position: absolute;\n      top: 50%;\n      right: 0; }\n    .dashboard-topbar .top-bar-section .has-dropdown.moved {\n      position: static; }\n      .dashboard-topbar .top-bar-section .has-dropdown.moved > .dropdown {\n        visibility: visible; }\n  .dashboard-topbar .top-bar-section .dropdown {\n    position: absolute;\n    left: 100%;\n    top: 0;\n    visibility: hidden;\n    z-index: 99; }\n    .dashboard-topbar .top-bar-section .dropdown li {\n      width: 100%; }\n      .dashboard-topbar .top-bar-section .dropdown li a {\n        font-weight: normal;\n        padding: 8px 15px; }\n    .dashboard-topbar .top-bar-section .dropdown label {\n      padding: 8px 15px 2px;\n      margin-bottom: 0;\n      text-transform: uppercase;\n      color: #555;\n      font-weight: bold;\n      font-size: 0.625em; }\n\n.dashboard-topbar .top-bar-js-breakpoint {\n  width: 58.75em !important;\n  visibility: hidden; }\n\n.dashboard-topbar .js-generated {\n  display: block; }\n\n@media only screen and (min-width: 58.75em) {\n  .dashboard-topbar .top-bar {\n    background: #111111;\n    *zoom: 1;\n    overflow: visible; }.dashboard-topbar \n    .top-bar:before,.dashboard-topbar  .top-bar:after {\n      content: " ";\n      display: table; }.dashboard-topbar \n    .top-bar:after {\n      clear: both; }.dashboard-topbar \n    .top-bar .toggle-topbar {\n      display: none; }.dashboard-topbar \n    .top-bar .title-area {\n      float: left; }.dashboard-topbar \n    .top-bar .name h1 a {\n      width: auto; }.dashboard-topbar \n    .top-bar input,.dashboard-topbar \n    .top-bar .button {\n      line-height: 2em;\n      font-size: 0.875em;\n      height: 2em;\n      padding: 0 10px;\n      position: relative;\n      top: 8px; }.dashboard-topbar \n    .top-bar.expanded {\n      background: #111111; }.dashboard-topbar \n\n  .contain-to-grid .top-bar {\n    max-width: 62.5em;\n    margin: 0 auto; }.dashboard-topbar \n\n  .top-bar-section {\n    -webkit-transition: none 0 0;\n    -moz-transition: none 0 0;\n    transition: none 0 0;\n    left: 0 !important; }.dashboard-topbar \n    .top-bar-section ul {\n      width: auto;\n      height: auto !important;\n      display: inline; }.dashboard-topbar \n      .top-bar-section ul li {\n        float: left; }.dashboard-topbar \n        .top-bar-section ul li .js-generated {\n          display: none; }.dashboard-topbar \n    .top-bar-section li a:not(.button) {\n      padding: 0 15px;\n      line-height: 45px;\n      background: #111111; }.dashboard-topbar \n      .top-bar-section li a:not(.button):hover {\n        background: #2b2b2b; }.dashboard-topbar \n    .top-bar-section .has-dropdown > a {\n      padding-right: 35px !important; }.dashboard-topbar \n      .top-bar-section .has-dropdown > a:after {\n        content: "";\n        display: block;\n        width: 0;\n        height: 0;\n        border: solid 5px;\n        border-color: rgba(255, 255, 255, 0.5) transparent transparent transparent;\n        margin-top: -2.5px; }.dashboard-topbar \n    .top-bar-section .has-dropdown.moved {\n      position: relative; }.dashboard-topbar \n      .top-bar-section .has-dropdown.moved > .dropdown {\n        visibility: hidden; }.dashboard-topbar \n    .top-bar-section .has-dropdown:hover > .dropdown,.dashboard-topbar  .top-bar-section .has-dropdown:active > .dropdown {\n      visibility: visible; }.dashboard-topbar \n    .top-bar-section .has-dropdown .dropdown li.has-dropdown > a:after {\n      border: none;\n      content: "\\00bb";\n      margin-top: -7px;\n      right: 5px; }.dashboard-topbar \n    .top-bar-section .dropdown {\n      left: 0;\n      top: auto;\n      background: transparent; }.dashboard-topbar \n      .top-bar-section .dropdown li a {\n        line-height: 1;\n        white-space: nowrap;\n        padding: 7px 15px;\n        background: #1e1e1e; }.dashboard-topbar \n      .top-bar-section .dropdown li label {\n        white-space: nowrap;\n        background: #1e1e1e; }.dashboard-topbar \n      .top-bar-section .dropdown li .dropdown {\n        left: 100%;\n        top: 0; }.dashboard-topbar \n    .top-bar-section > ul > .divider {\n      border-bottom: none;\n      border-top: none;\n      border-right: solid 1px #2b2b2b;\n      border-left: solid 1px black;\n      clear: none;\n      height: 45px;\n      width: 0px; }.dashboard-topbar \n    .top-bar-section .has-form {\n      background: #111111;\n      padding: 0 15px;\n      height: 45px; }.dashboard-topbar \n    .top-bar-section ul.right li .dropdown {\n      left: auto;\n      right: 0; }.dashboard-topbar \n      .top-bar-section ul.right li .dropdown li .dropdown {\n        right: 100%; } }\n\n.alertify-cover {\n  position: fixed;\n  z-index: 9999;\n  top: 0;\n  bottom: 0;\n  left: 0;\n  right: 0; }\n\n.alertify-dialog {\n  position: fixed;\n  z-index: 99999;\n  top: 50px;\n  left: 50%;\n  opacity: 1;\n  -webkit-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -moz-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -ms-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -o-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275); }\n\n.alertify-resetFocus {\n  border: 0;\n  clip: rect(0 0 0 0);\n  height: 1px;\n  width: 1px;\n  margin: -1px;\n  padding: 0;\n  overflow: hidden;\n  position: absolute; }\n\n.alertify-text {\n  margin-bottom: 15px;\n  width: 100%;\n  font-size: 100%;\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box; }\n\n.alertify-button,\n.alertify-button:hover,\n.alertify-button:active,\n.alertify-button:visited {\n  background: none;\n  text-decoration: none;\n  border: none;\n  line-height: 1.5;\n  font-size: 100%;\n  display: inline-block;\n  cursor: pointer;\n  margin-left: 5px; }\n\n.is-alertify-cover-hidden {\n  display: none; }\n\n.is-alertify-dialog-hidden {\n  opacity: 0;\n  display: none;\n  -webkit-transform: translate(0, -150px);\n  -moz-transform: translate(0, -150px);\n  -ms-transform: translate(0, -150px);\n  -o-transform: translate(0, -150px);\n  transform: translate(0, -150px); }\n\n:root * > .is-alertify-dialog-hidden {\n  display: block; }\n\n.alertify-logs {\n  position: fixed;\n  z-index: 9999; }\n\n.alertify-log {\n  position: relative;\n  display: block;\n  opacity: 0;\n  -webkit-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -moz-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -ms-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  -o-transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);\n  transition: all 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275); }\n\n.is-alertify-log-showing {\n  opacity: 1; }\n\n.is-alertify-log-hidden {\n  opacity: 0; }\n\n.alertify-dialog {\n  width: 550px;\n  margin-left: -275px;\n  background: #FFF;\n  border: 10px solid #333333;\n  border: 10px solid rgba(0, 0, 0, 0.7);\n  border-radius: 8px;\n  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.3);\n  -webkit-background-clip: padding;\n  -moz-background-clip: padding;\n  background-clip: padding-box; }\n\n.alertify-dialog-inner {\n  padding: 25px; }\n\n.alertify-inner {\n  text-align: center; }\n\n.alertify-text {\n  border: 1px solid #cccccc;\n  padding: 10px;\n  border-radius: 4px; }\n\n.alertify-button {\n  border-radius: 4px;\n  color: #FFF;\n  font-weight: bold;\n  padding: 6px 15px;\n  text-decoration: none;\n  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);\n  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5);\n  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));\n  background-image:    -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));\n  background-image:     -ms-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));\n  background-image:      -o-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));\n  background-image:         linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)); }\n\n.alertify-button:hover,\n.alertify-button:focus {\n  outline: none;\n  background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));\n  background-image:    -moz-linear-gradient(top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));\n  background-image:     -ms-linear-gradient(top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));\n  background-image:      -o-linear-gradient(top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));\n  background-image:         linear-gradient(top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }\n\n.alertify-button:focus {\n  box-shadow: 0 0 10px #2b72d5; }\n\n.alertify-button:active {\n  position: relative;\n  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05); }\n\n.alertify-button-cancel,\n.alertify-button-cancel:hover,\n.alertify-button-cancel:focus {\n  background-color: #fe1a00;\n  border: 1px solid #cb1500; }\n\n.alertify-button-ok,\n.alertify-button-ok:hover,\n.alertify-button-ok:focus {\n  background-color: #5cb811;\n  border: 1px solid #45890d; }\n\n@media only screen and (max-width: 680px) {\n  .alertify-dialog {\n    width: 90%;\n    left: 5%;\n    margin: 0;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box; } }\n.alertify-logs {\n  position: fixed;\n  z-index: 9999;\n  bottom: 8px;\n  right: 8px;\n  width: 300px; }\n\n.alertify-log {\n  margin-top: 8px;\n  right: -300px;\n  padding: 16px 16px;\n  border-radius: 4px; }\n\n.alertify-log-info {\n  background: #1F1F1F;\n  background: rgba(0, 0, 0, 0.9);\n  color: #FFF;\n  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.5); }\n\n.alertify-log-error {\n  color: #FFF;\n  background: #FE1A00;\n  background: rgba(254, 26, 0, 0.9); }\n\n.alertify-log-success {\n  color: #FFF;\n  background: #5CB811;\n  background: rgba(92, 184, 17, 0.9); }\n\n.is-alertify-log-showing {\n  right: 0; }\n\n.is-alertify-log-hidden {\n  right: -300px; }\n'
   }));
 
 (function (root, factory) {
@@ -12926,7 +13776,7 @@ app.prototype.loadTopbar = function(data, callback) {
                      },
                      error  : function(err, b, c) {
                         pass = false;
-                        app.log('Access Denied.', {center:true});
+                        app.log('Access Denied.', {type: 'error'});
                      }
 
                  });
@@ -13088,7 +13938,7 @@ function logout() {
             }
         },
         error  : function() {
-            alert('error loging out.');
+            app.alert('error loging out.');
         }
      });
     return false;
@@ -13118,102 +13968,15 @@ function checkLogoutDestination() {
 
 // stuff for notifications
 app.log = function(msg, options) {
-    if (!options) options = {};
-    // Use the last visible jGrowl qtip as our positioning target
-    var target = $('.qtip.cluetip:visible:last'),
-        my = 'top right',
-        at = (target.length ? 'bottom' : 'top') + ' right';
+    var type = 'success';
+    if (options && options.type) type = options.type;
 
-    if (options.center) {
-        my = 'center center';
-        at = 'center center';
-    }
-
-    // Create your jGrowl qTip...
-    $(document.body).qtip({
-        // Any content config you want here really.... go wild!
-        content: {
-            text: msg
-        },
-        position: {
-            my: my,
-            // Not really important...
-            at: at,
-            // If target is window use 'top right' instead of 'bottom right'
-            target: target.length ? target : $(window),
-            // Use our target declared above
-            adjust: { y: (target.length ? 8 : 30), x: (target.length ? 0 : -5)  },
-            effect: function(api, newPos) {
-                // Animate as usual if the window element is the target
-                $(this).animate(newPos, {
-                    duration: 400,
-                    queue: false
-                });
-
-                // Store the final animate position
-                api.cache.finalPos = newPos;
-            }
-        },
-        show: {
-            event: false,
-            // Don't show it on a regular event
-            ready: true,
-            // Show it when ready (rendered)
-            effect: function() {
-                $(this).stop(0, 1).fadeIn(600);
-            },
-            // Matches the hide effect
-            delay: 0,
-            // Needed to prevent positioning issues
-            // Custom option for use with the .get()/.set() API, awesome!
-            persistent: false
-        },
-        hide: {
-            event: false,
-            // Don't hide it on a regular event
-            effect: function(api) {
-                // Do a regular fadeOut, but add some spice!
-                $(this).stop(0, 1).fadeOut(400).queue(function() {
-                    // Destroy this tooltip after fading out
-                    api.destroy();
-
-                });
-            }
-        },
-        style: {
-            classes: 'cluetip qtip-tipsy',
-            // Some nice visual classes
-            tip: false // No tips for this one (optional ofcourse)
-        },
-        events: {
-            render: function(event, api) {
-                // Trigger the timer (below) on render
-                timer.call(api.elements.tooltip, event);
-            }
-        }
-    }).removeData('qtip');
+   window.Alertify.log[type](msg);
 };
 
-// Setup our timer function
-function timer(event) {
-    var api = $(this).data('qtip'),
-        lifespan = 3000; // 3s second lifespan
-
-    // If persistent is set to true, don't do anything.
-    if (api.get('show.persistent') === true) { return; }
-
-    // Otherwise, start/clear the timer depending on event type
-    clearTimeout(api.timer);
-    if (event.type !== 'mouseover') {
-        api.timer = setTimeout(api.hide, lifespan);
-    }
-}
-
-// Utilise delegate so we don't have to rebind for every qTip!
-$(document).delegate('.qtip.cluetip', 'mouseover mouseout', timer);
-
-
-
+app.alert = function(msg, options) {
+    window.Alertify.dialog.alert(msg);
+};
 
 
 return app;

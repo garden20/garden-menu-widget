@@ -25,6 +25,14 @@ return {
 
     },
     top_nav_bar : {
+        disablePouch: true,
+        showSession: true,
+        divSelector: 'body',
+        sticky: false,
+        position: 'relative',
+        defaultAppName: null,
+        defaultTitle: 'CouchDB',
+
         bg_color : '#1D1D1D',
         link_color : '#BFBFBF',
         active_link_color : '#FFFFFF',

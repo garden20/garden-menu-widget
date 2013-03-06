@@ -11732,6 +11732,14 @@ return {
 
     },
     top_nav_bar : {
+        disablePouch: true,
+        showSession: true,
+        divSelector: 'body',
+        sticky: false,
+        position: 'relative',
+        defaultAppName: null,
+        defaultTitle: 'CouchDB',
+
         bg_color : '#1D1D1D',
         link_color : '#BFBFBF',
         active_link_color : '#FFFFFF',
@@ -11811,17 +11819,18 @@ app.prototype.getAppLinks = function(options, callback) {
     menu.dashboard_core.topbar(function(err, results) {
         if (err) return callback(err);
 
-        menu.settings = _.defaults(results.settingsDoc, default_settings);
-        var settings = results.settingsDoc;
-
-        results.dashboard_url = menu.dashboard_ui_url(),
-        results.home_url = results.dashboard_url,
-        results.settings_url  = results.dashboard_url + "settings";
-        results.login_url = menu.login_url(results.dashboard_url);
+        menu.settings = {};
+        _.extend(menu.settings, results.settingsDoc, default_settings);
 
 
-        if (settings.frontpage.use_link) {
-            results.home_url = settings.frontpage.link_url;
+        results.dashboard_url = menu.dashboard_ui_url(menu.settings, results.no_db_file),
+        results.home_url = menu.home_url(results.dashboard_url, results.no_db_file);
+        results.settings_url  = menu.settings_url(results.dashboard_url, results.no_db_file);
+        results.login_url = menu.login_url(results.dashboard_url, results.no_db_file);
+
+
+        if (menu.settings.frontpage.use_link) {
+            results.home_url = menu.settings.frontpage.link_url;
         }
 
         results.apps = _.map(results.apps, function(app) {
@@ -11848,7 +11857,8 @@ app.prototype.getAppLinks = function(options, callback) {
 };
 
 
-app.prototype.login_url = function(dashboard_url) {
+app.prototype.login_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
     var login_url = dashboard_url + 'login';
 
     if (this.settings.sessions.type == 'other') {
@@ -11857,15 +11867,17 @@ app.prototype.login_url = function(dashboard_url) {
     return login_url;
 };
 
-app.prototype.dashboard_ui_url = function() {
+app.prototype.dashboard_ui_url = function(settings, no_db_file) {
 
-    if (this.settings.host_options.rootDashboard) {
+    if (no_db_file) return null;
+
+    if (settings.host_options.rootDashboard) {
         // only if the current host matches one of the specified hosts
         var use_short = false;
         // dermine if we are on the server or browser
         if (typeof window !== 'undefined') {
             var host = window.location.host;
-            var hostnames = this.settings.host_options.hostnames.split(',');
+            var hostnames = settings.host_options.hostnames.split(',');
             _.each(hostnames, function(hostname){
                 var p = url.parse(hostname);
                 var to_bind = p.hostname;
@@ -11880,8 +11892,21 @@ app.prototype.dashboard_ui_url = function() {
     return  '/dashboard/_design/dashboard/_rewrite/';
 };
 
+app.prototype.home_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
+    else return dashboard_url;
+};
 
-app.prototype.app_url_ui = function(app_install_doc) {
+
+app.prototype.settings_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
+    else return dashboard_url + "settings";
+};
+
+app.prototype.app_url_ui = function(app_install_doc, no_db_file) {
+
+    if (no_db_file) return null;
+
     var meta = app_install_doc.couchapp || app_install_doc.kanso;
     try {
         if (meta.config.legacy_mode) {
@@ -13538,7 +13563,7 @@ __p+='';
 (login_url)+
 '">Login</a>\n';
  } else { 
-;__p+='\n    <a class="profile-link" data-dropdown="profile-drop"">\n        <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n        <span>'+
+;__p+='\n    <a class="profile-link" data-dropdown="profile-drop">\n        <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n        <span>'+
 ( displayName )+
 '</span>\n    </a>\n\n\n';
  } 
@@ -13554,7 +13579,15 @@ __p+='';
  if (options.sticky) { 
 ;__p+='\n<div class="sticky">\n';
  } 
-;__p+='\n\n\n<nav class="top-bar">\n\n    <ul class="title-area">\n      <!-- Title Area -->\n      <li class="name">\n        <h1><a href="/">Garden</a></h1>\n      </li>\n      <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->\n      <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>\n    </ul>\n\n\n    <section class="top-bar-section">\n        <ul class="left kanso-nav">\n            ';
+;__p+='\n\n\n<nav class="top-bar">\n\n    <ul class="title-area">\n      <!-- Title Area -->\n      <li class="name">\n        <h1><a href="';
+if (data.home_url) {
+;__p+=''+
+(data.home_url)+
+'';
+}
+;__p+='">'+
+(options.defaultTitle)+
+'</a></h1>\n      </li>\n      <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->\n      <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>\n    </ul>\n\n\n    <section class="top-bar-section">\n        <ul class="left kanso-nav">\n            ';
  _.each(data.grouped_apps.apps, function(app) { 
 ;__p+='\n            <li>\n                <a href="'+
 ( app.link )+
@@ -13575,10 +13608,22 @@ __p+='';
 '</a>\n            </li>\n            ';
  }) 
 ;__p+='\n\n            ';
- if (data.settingsDoc.top_nav_bar.show_futon) {  
-;__p+='\n                <li><a href="/_utils/">Futon</a></li>\n            ';
+ if (data.defaultApp) {  
+;__p+='\n                <li>\n                  <a href="'+
+( data.defaultApp.link )+
+'">'+
+( data.defaultApp.title )+
+'</a>\n                </li>\n            ';
  } 
-;__p+='\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n<div id="profile-drop" class="f-dropdown content">\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <span>dsdasdasdas</span>\n</div>\n\n';
+;__p+='\n\n            ';
+ if (options.show_futon) {  
+;__p+='\n                <li><a href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>\n            ';
+ } 
+;__p+='\n\n            ';
+ if (data.no_db_file) {  
+;__p+='\n                <li><a href="#" data-dropdown="initGarden-drop">Apps</a></li>\n            ';
+ } 
+;__p+='\n\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n<div id="profile-drop" class="f-dropdown content">\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <span>dsdasdasdas</span>\n</div>\n\n<div id="initGarden-drop" class="f-dropdown content">\n  Apps not enabled.\n  <button class="button" >Enable Apps</button>\n  <a href="http://apps.couchdb.apache.org">Learn More</a>\n</div>\n\n\n';
  if (options.sticky) { 
 ;__p+='\n</div>\n';
  } 
@@ -13701,6 +13746,19 @@ var css =  {
 
 '#dashboard-profile a.profile-link span': {
     'float' : 'right'
+},
+
+'#initGarden-drop': {
+    'text-align': 'center'
+},
+'#initGarden-drop button': {
+    display: 'block',
+    width: '94px',
+    'margin-right': 'auto',
+    'margin-left': 'auto',
+    'margin-top': '5px',
+    'margin-bottom': '15px',
+    'font-size': '11px'
 }
 
 };  // end of css block
@@ -13743,6 +13801,7 @@ return function(options) {
             root.events,
             root.url,
             root.garden_menu,
+            root.garden_default_settings,
             root.jscss,
             root.garden_menu_widget_css,
             root.garden_menu_widget_extra_css,
@@ -13754,20 +13813,14 @@ return function(options) {
             root.JST["templates/profile.underscore"]
         );
     }
-}(this, function ($, _, events, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
 var app = function(dashboard_db_url, options) {
     if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
 
-    var defaults = {
-        disablePouch: true,
-        showSession: true,
-        divSelector: 'body',
-        sticky: false,
-        position: 'relative'
-    };
+    var defaults = {};
 
     // adjust defaults for pouch based on env
     if (Modernizr.indexeddb || Modernizr.websqldatabase) {
@@ -13806,9 +13859,17 @@ app.prototype.init = function(callback) {
         widget.garden_menu.getAppLinks(function(err, links){
 
             if (err) return callback(err);
+
+            // the final merge. Priority ends up (from highest to lowest)
+            //   1. The db settings doc
+            //   2. Any options passed into the new garden-menu-widget(...,options)
+            //   3. The garden-default-settings js module
+            widget.finalSettings = {};
+            _.extend(widget.finalSettings, garden_settings.top_nav_bar, links.settingsDoc.top_nav_bar, widget.options);
+
             widget.loadTopbar(links, function(err){
 
-                if (widget.options.showSession) {
+                if (widget.finalSettings.showSession) {
                     widget.cachedLinks = links;
                     widget.core.getCachedSession(function(err, session){
                         widget.last_user = session.userCtx.name;
@@ -13851,18 +13912,25 @@ app.prototype.loadTopbar = function(data, callback) {
     jscss.embed(extra_css);
 
     // the computed styles always win
-    jscss.embed(jscss.compile(css(me.options)));
+    jscss.embed(jscss.compile(css(me.finalSettings)));
 
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
         $topbar = $('<div id="dashboard-topbar"></div>');
-        $(me.options.divSelector).prepend($topbar);
+        $(me.finalSettings.divSelector).prepend($topbar);
     }
 
     // for the new foundation prefixed stuff
     $topbar.addClass('dashboard-topbar');
 
-    $topbar.html(topbar_t({data: data, options: me.options } ));
+    if(data.apps.length === 0 && data.no_db_file && me.finalSettings.defaultAppName) {
+        // show an *app* at the current url. Useful for non loaded gardens!
+        data.defaultApp = {
+            link: window.location.pathname,
+            title: me.finalSettings.defaultAppName
+        };
+    }
+    $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
     try {
         $(document).foundation();
@@ -13973,21 +14041,16 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    $('#dashboard-topbar .username').click(function() {
-        $('#dashboard-profile').toggle();
-        $(document).one('click', function() {
-            $('#dashboard-profile').hide();
-        });
-        return false;
-    });
 
     $('#dashboard-topbar .logout').click(logout);
 
+    $('#initGarden-drop button').live('click', function(){
+
+    });
 
 
 
-
-    if (!me.options.disablePouch && !data.no_db_file) {
+    if (!me.finalSettings.disablePouch && !data.no_db_file) {
         // add a sync icon
         me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
             size: 21,

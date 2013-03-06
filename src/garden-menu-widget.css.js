@@ -108,6 +108,19 @@ var css =  {
 
 '#dashboard-profile a.profile-link span': {
     'float' : 'right'
+},
+
+'#initGarden-drop': {
+    'text-align': 'center'
+},
+'#initGarden-drop button': {
+    display: 'block',
+    width: '94px',
+    'margin-right': 'auto',
+    'margin-left': 'auto',
+    'margin-top': '5px',
+    'margin-bottom': '15px',
+    'font-size': '11px'
 }
 
 };  // end of css block

@@ -46,17 +46,18 @@ app.prototype.getAppLinks = function(options, callback) {
     menu.dashboard_core.topbar(function(err, results) {
         if (err) return callback(err);
 
-        menu.settings = _.defaults(results.settingsDoc, default_settings);
-        var settings = results.settingsDoc;
-
-        results.dashboard_url = menu.dashboard_ui_url(),
-        results.home_url = results.dashboard_url,
-        results.settings_url  = results.dashboard_url + "settings";
-        results.login_url = menu.login_url(results.dashboard_url);
+        menu.settings = {};
+        _.extend(menu.settings, results.settingsDoc, default_settings);
 
 
-        if (settings.frontpage.use_link) {
-            results.home_url = settings.frontpage.link_url;
+        results.dashboard_url = menu.dashboard_ui_url(menu.settings, results.no_db_file),
+        results.home_url = menu.home_url(results.dashboard_url, results.no_db_file);
+        results.settings_url  = menu.settings_url(results.dashboard_url, results.no_db_file);
+        results.login_url = menu.login_url(results.dashboard_url, results.no_db_file);
+
+
+        if (menu.settings.frontpage.use_link) {
+            results.home_url = menu.settings.frontpage.link_url;
         }
 
         results.apps = _.map(results.apps, function(app) {
@@ -83,7 +84,8 @@ app.prototype.getAppLinks = function(options, callback) {
 };
 
 
-app.prototype.login_url = function(dashboard_url) {
+app.prototype.login_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
     var login_url = dashboard_url + 'login';
 
     if (this.settings.sessions.type == 'other') {
@@ -92,15 +94,17 @@ app.prototype.login_url = function(dashboard_url) {
     return login_url;
 };
 
-app.prototype.dashboard_ui_url = function() {
+app.prototype.dashboard_ui_url = function(settings, no_db_file) {
 
-    if (this.settings.host_options.rootDashboard) {
+    if (no_db_file) return null;
+
+    if (settings.host_options.rootDashboard) {
         // only if the current host matches one of the specified hosts
         var use_short = false;
         // dermine if we are on the server or browser
         if (typeof window !== 'undefined') {
             var host = window.location.host;
-            var hostnames = this.settings.host_options.hostnames.split(',');
+            var hostnames = settings.host_options.hostnames.split(',');
             _.each(hostnames, function(hostname){
                 var p = url.parse(hostname);
                 var to_bind = p.hostname;
@@ -115,8 +119,21 @@ app.prototype.dashboard_ui_url = function() {
     return  '/dashboard/_design/dashboard/_rewrite/';
 };
 
+app.prototype.home_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
+    else return dashboard_url;
+};
 
-app.prototype.app_url_ui = function(app_install_doc) {
+
+app.prototype.settings_url = function(dashboard_url, no_db_file) {
+    if (no_db_file) return null;
+    else return dashboard_url + "settings";
+};
+
+app.prototype.app_url_ui = function(app_install_doc, no_db_file) {
+
+    if (no_db_file) return null;
+
     var meta = app_install_doc.couchapp || app_install_doc.kanso;
     try {
         if (meta.config.legacy_mode) {

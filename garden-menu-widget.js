@@ -21,6 +21,7 @@
             root.events,
             root.url,
             root.garden_menu,
+            root.garden_default_settings,
             root.jscss,
             root.garden_menu_widget_css,
             root.garden_menu_widget_extra_css,
@@ -32,20 +33,14 @@
             root.JST["templates/profile.underscore"]
         );
     }
-}(this, function ($, _, events, url, GardenMenu, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
 var app = function(dashboard_db_url, options) {
     if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
 
-    var defaults = {
-        disablePouch: true,
-        showSession: true,
-        divSelector: 'body',
-        sticky: false,
-        position: 'relative'
-    };
+    var defaults = {};
 
     // adjust defaults for pouch based on env
     if (Modernizr.indexeddb || Modernizr.websqldatabase) {
@@ -84,9 +79,17 @@ app.prototype.init = function(callback) {
         widget.garden_menu.getAppLinks(function(err, links){
 
             if (err) return callback(err);
+
+            // the final merge. Priority ends up (from highest to lowest)
+            //   1. The db settings doc
+            //   2. Any options passed into the new garden-menu-widget(...,options)
+            //   3. The garden-default-settings js module
+            widget.finalSettings = {};
+            _.extend(widget.finalSettings, garden_settings.top_nav_bar, links.settingsDoc.top_nav_bar, widget.options);
+
             widget.loadTopbar(links, function(err){
 
-                if (widget.options.showSession) {
+                if (widget.finalSettings.showSession) {
                     widget.cachedLinks = links;
                     widget.core.getCachedSession(function(err, session){
                         widget.last_user = session.userCtx.name;
@@ -129,18 +132,25 @@ app.prototype.loadTopbar = function(data, callback) {
     jscss.embed(extra_css);
 
     // the computed styles always win
-    jscss.embed(jscss.compile(css(me.options)));
+    jscss.embed(jscss.compile(css(me.finalSettings)));
 
     var $topbar = $('#dashboard-topbar');
     if ($topbar.length === 0) {
         $topbar = $('<div id="dashboard-topbar"></div>');
-        $(me.options.divSelector).prepend($topbar);
+        $(me.finalSettings.divSelector).prepend($topbar);
     }
 
     // for the new foundation prefixed stuff
     $topbar.addClass('dashboard-topbar');
 
-    $topbar.html(topbar_t({data: data, options: me.options } ));
+    if(data.apps.length === 0 && data.no_db_file && me.finalSettings.defaultAppName) {
+        // show an *app* at the current url. Useful for non loaded gardens!
+        data.defaultApp = {
+            link: window.location.pathname,
+            title: me.finalSettings.defaultAppName
+        };
+    }
+    $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
     try {
         $(document).foundation();
@@ -251,21 +261,16 @@ app.prototype.loadTopbar = function(data, callback) {
     });
 
 
-    $('#dashboard-topbar .username').click(function() {
-        $('#dashboard-profile').toggle();
-        $(document).one('click', function() {
-            $('#dashboard-profile').hide();
-        });
-        return false;
-    });
 
     $('#dashboard-topbar .logout').click(logout);
 
+    $('#initGarden-drop button').live('click', function(){
+
+    });
 
 
 
-
-    if (!me.options.disablePouch && !data.no_db_file) {
+    if (!me.finalSettings.disablePouch && !data.no_db_file) {
         // add a sync icon
         me.sync_icon = new SyncIcon('dashboard-topbar-offline-icon', {
             size: 21,

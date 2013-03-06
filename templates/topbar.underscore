@@ -40,11 +40,11 @@
             <% } %>
 
             <% if (options.show_futon) {  %>
-                <li><a href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>
+                <li><a class="fauxton_link" href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>
             <% } %>
 
             <% if (data.no_db_file) {  %>
-                <li><a href="#" data-dropdown="initGarden-drop">Apps</a></li>
+                <li><a class="apps_link" href="#" data-dropdown="initGarden-drop">Apps</a></li>
             <% } %>
 
         </ul>

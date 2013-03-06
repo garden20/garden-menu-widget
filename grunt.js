@@ -75,6 +75,11 @@ var couch_config = {
           }
 };
 
+var qunit_tests = [
+  'http://localhost:5984/garden_menu_widget/_design/gmw/basic/basic.html',
+  'http://localhost:5984/garden_menu_widget/_design/gmw/fauxton/fauxton.html'
+];
+
 // borrowed from https://github.com/requirejs/text/blob/master/text.js#L44
 var jsEscape = function (content) {
       return content.replace(/(['\\])/g, '\\$1')
@@ -144,7 +149,7 @@ module.exports = function(grunt) {
     mkcouchdb: couch_config,
     rmcouchdb: couch_config,
     qunit: {
-      all: ['http://localhost:5984/garden_menu_widget/_design/gmw/index.html']
+      all: qunit_tests
     }
   });
 

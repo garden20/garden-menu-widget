@@ -150,6 +150,8 @@ app.prototype.loadTopbar = function(data, callback) {
             title: me.finalSettings.defaultAppName
         };
     }
+    console.log(me.finalSettings);
+
     $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
     try {

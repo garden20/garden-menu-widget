@@ -13617,11 +13617,11 @@ if (data.home_url) {
  } 
 ;__p+='\n\n            ';
  if (options.show_futon) {  
-;__p+='\n                <li><a href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>\n            ';
+;__p+='\n                <li><a class="fauxton_link" href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>\n            ';
  } 
 ;__p+='\n\n            ';
  if (data.no_db_file) {  
-;__p+='\n                <li><a href="#" data-dropdown="initGarden-drop">Apps</a></li>\n            ';
+;__p+='\n                <li><a class="apps_link" href="#" data-dropdown="initGarden-drop">Apps</a></li>\n            ';
  } 
 ;__p+='\n\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n<div id="profile-drop" class="f-dropdown content">\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <span>dsdasdasdas</span>\n</div>\n\n<div id="initGarden-drop" class="f-dropdown content">\n  Apps not enabled.\n  <button class="button" >Enable Apps</button>\n  <a href="http://apps.couchdb.apache.org">Learn More</a>\n</div>\n\n\n';
  if (options.sticky) { 
@@ -13930,6 +13930,8 @@ app.prototype.loadTopbar = function(data, callback) {
             title: me.finalSettings.defaultAppName
         };
     }
+    console.log(me.finalSettings);
+
     $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
     try {
@@ -14227,7 +14229,11 @@ function parseQueryString(str){
   if ('' === str) return {};
   return reduce(str.split('&'), function(obj, pair){
     var parts = pair.split('=');
-    obj[parts[0]] = null === parts[1] ? '' : decodeURIComponent(parts[1]);
+    var val = null === parts[1] ? '' : decodeURIComponent(parts[1]);
+    if (val ==='false') {
+      val = false;
+    }
+    obj[parts[0]] = val;
     return obj;
   }, {});
 }

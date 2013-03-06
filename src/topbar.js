@@ -40,7 +40,11 @@ function parseQueryString(str){
   if ('' === str) return {};
   return reduce(str.split('&'), function(obj, pair){
     var parts = pair.split('=');
-    obj[parts[0]] = null === parts[1] ? '' : decodeURIComponent(parts[1]);
+    var val = null === parts[1] ? '' : decodeURIComponent(parts[1]);
+    if (val ==='false') {
+      val = false;
+    }
+    obj[parts[0]] = val;
     return obj;
   }, {});
 }

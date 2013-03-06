@@ -33,6 +33,8 @@ var bundle_js = [
   "lib/alertify.js",
   "lib/foundation.js",
   "lib/foundation.topbar.js",
+  //"lib/foundation.joyride.js",
+  "lib/foundation.dropdown.js",
   "temp/templates.js",
   "dist/compiled_css.js",
   "src/garden-menu-widget.css.js",
@@ -44,6 +46,10 @@ var extraCss = [
 
   {
     "file": "css/foundation.topbar.css",
+    "prefix": true
+  },
+  {
+    "file": "css/foundation.dropdown.css",
     "prefix": true
   },
   {

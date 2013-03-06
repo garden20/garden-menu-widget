@@ -77,7 +77,8 @@ var couch_config = {
 
 var qunit_tests = [
   'http://localhost:5984/garden_menu_widget/_design/gmw/basic/basic.html',
-  'http://localhost:5984/garden_menu_widget/_design/gmw/fauxton/fauxton.html'
+  'http://localhost:5984/garden_menu_widget/_design/gmw/fauxton/fauxton.html',
+  'http://localhost:5984/garden_menu_widget/_design/gmw/no_session/no_session.html'
 ];
 
 // borrowed from https://github.com/requirejs/text/blob/master/text.js#L44

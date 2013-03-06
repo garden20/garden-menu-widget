@@ -48,6 +48,11 @@
       </section>
 </nav>
 
+<div id="profile-drop" class="f-dropdown content">
+    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">
+    <span>dsdasdasdas</span>
+</div>
+
 <% if (options.sticky) { %>
 </div>
 <% } %>

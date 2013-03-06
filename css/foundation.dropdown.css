@@ -154,3 +154,14 @@ select {
     max-width: 500px; }
   .f-dropdown.large {
     max-width: 800px; }
+
+.f-dropdown.reverse:after {
+  left: auto !important;
+  right: 9px !important;
+}
+
+.f-dropdown.reverse:before {
+  left: auto !important;
+  right: 10px !important;
+}
+

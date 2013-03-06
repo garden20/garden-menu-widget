@@ -13196,7 +13196,6 @@ var logs = (function () {
     },
 
     init : function (scope, method, options) {
-      console.log('doing the init');
       var self = this;
       this.scope = scope || this.scope;
 

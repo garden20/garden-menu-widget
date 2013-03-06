@@ -43,7 +43,7 @@ var bundle_js = [
 var extraCss = [
 
   {
-    "file": "css/foundation.css",
+    "file": "css/foundation.topbar.css",
     "prefix": true
   },
   {

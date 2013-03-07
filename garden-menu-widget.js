@@ -29,11 +29,13 @@
             root.bowser,
             root.svg,
             root.SyncIcon,
+            root.gravatar,
             root.JST["templates/topbar.underscore"],
-            root.JST["templates/profile.underscore"]
+            root.JST["templates/profile.underscore"],
+            root.JST["templates/profile_drop.underscore"]
         );
     }
-}(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
+}(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, gravatar, topbar_t, profile_t, profile_drop_t) {
 
 
 var foundation = null;
@@ -268,7 +270,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
 
 
-    $('#dashboard-topbar .logout').click(logout);
+    $('#dashboard-topbar .logout').live('click', logout);
 
     $('#initGarden-drop button').live('click', function(){ me.initGarden(); });
 
@@ -336,6 +338,21 @@ app.prototype.showSession = function(session) {
 
     session.login_url = session.login_url + "?redirect=" + encodeURIComponent(window.location);
 
+
+
+
+    if (session.is_user || session.is_admin) {
+        var grav = {
+            email: session.userCtx.name,
+            size: 20,
+            default_image: 'retro'
+        };
+        session.gravatar_small = gravatar.avatarURL(grav);
+        grav.size = 80;
+        session.gravatar_large = gravatar.avatarURL(grav);
+
+        $('#profile-drop').html(profile_drop_t(session));
+    }
     $('#dashboard-profile').html(profile_t(session));
 
     var show_admin = session.is_admin || session.is_admin_party;
@@ -363,7 +380,7 @@ function logout() {
 
 
     $.ajax({
-        url : '/dashboard/_design/dashboard/_rewrite/_couch/_session',
+        url : '/_session',
         type: 'DELETE',
         dataType: 'json',
         success: function(){

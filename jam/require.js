@@ -2078,6 +2078,11 @@ var jam = {
             "main": "garden-views.js"
         },
         {
+            "name": "gravatar",
+            "location": "jam/gravatar",
+            "main": "gravatar.js"
+        },
+        {
             "name": "jquery",
             "location": "jam/jquery",
             "main": "jquery.js"
@@ -2101,11 +2106,6 @@ var jam = {
             "name": "pouchdb",
             "location": "jam/pouchdb",
             "main": "dist/pouchdb.amd-nightly.js"
-        },
-        {
-            "name": "qTip2",
-            "location": "jam/qTip2",
-            "main": "dist/jquery.qtip.js"
         },
         {
             "name": "querystring",

@@ -1,0 +1,5 @@
+<img src="<%= gravatar_large %>" />
+<span><%= displayName %></span>
+<div>
+    <button id="topbar-logout" class="logout">Logout</a>
+</div>

@@ -123,11 +123,21 @@ var css =  {
     'margin-bottom': '15px',
     'font-size': '11px'
 },
-'#dashboard-topbar .top-bar-section ul li > a': {
+'#dashboard-topbar .top-bar-section ul.kanso-nav li > a': {
     'text-transform': 'capitalize'
 },
 '#dashboard-topbar .admin_only': {
     display: 'none'
+},
+
+'#profile-drop' : {
+    'text-align': 'center'
+},
+
+'#profile-drop img' : {
+    width: '80px',
+    'margin-left': 'auto',
+    'margin-right': 'auto'
 }
 
 };  // end of css block

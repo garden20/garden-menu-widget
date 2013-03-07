@@ -1,10 +1,14 @@
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
+(function (root, factory) {
+    if (typeof exports === 'object') {
+        module.exports = factory( require('underscore')._);
+    } else if (typeof define === 'function' && define.amd) {
+        define(['underscore'],factory);
+    } else {
+        root.querystring = factory(root._);
+    }
+}(this, function (_) {
 
-define(['require', 'underscore'],function(require) {
 
-var _ = require('underscore')._;
 var QueryString = {};
 /**
  * Querystring functions ported from node.js to work in CouchDB and the browser.
@@ -185,4 +189,4 @@ QueryString.parse = QueryString.decode = function (qs, sep, eq) {
 };
 
     return QueryString;
-});
+}));

@@ -150,7 +150,6 @@ app.prototype.loadTopbar = function(data, callback) {
             title: me.finalSettings.defaultAppName
         };
     }
-    console.log(me.finalSettings);
 
     $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
@@ -278,14 +277,17 @@ app.prototype.loadTopbar = function(data, callback) {
             size: 21,
             state: mapCoreStatesToDisplay(me.core.getState())
         });
+    } else {
+        $('#dashboard-topbar-offline-icon').hide();
+    }
+
+    // bind state changes.
+    me.core.bind(function(event, old_state, new_state) {
+        // filter some chaff
+        if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
 
 
-        // bind state changes.
-        me.core.bind(function(event, old_state, new_state) {
-            // filter some chaff
-            if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
-
-
+        if (me.sync_icon) {
             // show the sync state
             var display_state = mapCoreStatesToDisplay(new_state);
             if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
@@ -293,26 +295,25 @@ app.prototype.loadTopbar = function(data, callback) {
             } else {
                 me.sync_icon[display_state]();
             }
+        }
 
-            me.core.getCachedSession(function(err, session){
-                if (session.userCtx.name === me.last_user) return;
-                me.showSession(session);
-                me.last_user = session.userCtx.name;
-            });
-            me.last_state = new_state;
+        me.core.getCachedSession(function(err, session){
+            if (session.userCtx.name === me.last_user) return;
+            me.showSession(session);
+            me.last_user = session.userCtx.name;
         });
+        me.last_state = new_state;
+    });
 
-        // on click on sync icon
-        $('#dashboard-topbar-offline-icon').click(function(){
-            var state = me.core.getState();
-            if (state === 'FIRST_VISIT') {
-                me.sync_icon.syncing();
-                me.core.sync();
-            }
-        });
-    } else {
-        $('#dashboard-topbar-offline-icon').hide();
-    }
+    // on click on sync icon
+    $('#dashboard-topbar-offline-icon').click(function(){
+        var state = me.core.getState();
+        if (state === 'FIRST_VISIT') {
+            me.sync_icon.syncing();
+            me.core.sync();
+        }
+    });
+
 
     if (callback) callback(null);
     $topbar.data('ready', true);
@@ -323,7 +324,9 @@ app.prototype.loadTopbar = function(data, callback) {
 app.prototype.showSession = function(session) {
 
 
-    session.is_user = (session.userCtx.name || false);
+    session.is_user = isUser(session.userCtx);
+    session.is_admin = isAdmin(session.userCtx);
+    session.is_admin_party = isAdminParty(session.userCtx);
 
     session.displayName = session.userCtx.name;
     session.login_url = this.cachedLinks.login_url;
@@ -331,6 +334,12 @@ app.prototype.showSession = function(session) {
     session.login_url = session.login_url + "?redirect=" + encodeURIComponent(window.location);
 
     $('#dashboard-profile').html(profile_t(session));
+
+    var show_admin = session.is_admin || session.is_admin_party;
+
+
+    $('#dashboard-topbar .admin_only').toggle(show_admin);
+
 };
 
 
@@ -388,7 +397,31 @@ function checkLogoutDestination() {
 }
 
 
+function isAdmin(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.name) return false;
+    if (!userCtx.roles) return false;
+    if (userCtx.roles.indexOf('_admin') === -1) return false;
 
+    return true;
+}
+
+function isAdminParty(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.roles) return false;
+    if (userCtx.name) return false;
+
+    if (userCtx.roles.indexOf('_admin') === -1) return false;
+
+    return true;
+}
+
+
+function isUser(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.name) return false;
+    return true;
+}
 
 
 // stuff for notifications

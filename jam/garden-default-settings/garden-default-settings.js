@@ -44,7 +44,8 @@ return {
         show_gravatar : true,
         show_username : true,
         notification_theme: 'libnotify',
-        show_futon : true
+        show_futon : true,
+        dashboard_seed: 'http://garden20.iriscouch.com/dashboard_seed'
     },
     sessions : {
         type : 'internal',

@@ -121,6 +121,12 @@ var css =  {
     'margin-top': '5px',
     'margin-bottom': '15px',
     'font-size': '11px'
+},
+'#dashboard-topbar .top-bar-section ul li > a': {
+    'text-transform': 'capitalize'
+},
+'#dashboard-topbar .admin_only': {
+    display: 'none'
 }
 
 };  // end of css block

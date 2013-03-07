@@ -1,4 +1,6 @@
-<% if (!is_user) { %>
+<% if (is_admin_party) { %>
+    <a class="login" href="<%=login_url%>">Admin Party</a>
+<% } else if (!is_user) { %>
     <a class="login" href="<%=login_url%>">Login</a>
 <% } else { %>
     <a class="profile-link" data-dropdown="profile-drop">

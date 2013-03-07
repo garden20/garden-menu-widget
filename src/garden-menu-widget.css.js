@@ -43,7 +43,8 @@ var css =  {
     'background-color': '#111111',
     'position': 'absolute',
     'top': '0px',
-    'right': '0px'
+    'right': '0px',
+    'max-height': '45px'
 },
 
 '#dashboard-topbar .top-bar.expanded .top-bar-section .right': {

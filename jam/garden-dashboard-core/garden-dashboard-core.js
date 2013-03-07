@@ -336,7 +336,10 @@ var app = function(dashboard_db_url, options) {
             apps: [],
             scripts: []
         };
+        // there is no db
         if (err && err.status === 404 && err.reason === 'no_db_file') return topbar_empty(results, callback);
+        // the design doc is not there...
+        if (err && err.status === 404 && err.reason === 'missing') return topbar_empty(results, callback);
         if (err) return callback(err);
         async.forEach(resp.rows, function(row, cb){
             if (row.key[0] === 0) results.settingsDoc = row.value;

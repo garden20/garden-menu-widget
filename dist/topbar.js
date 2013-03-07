@@ -11552,7 +11552,10 @@ var app = function(dashboard_db_url, options) {
             apps: [],
             scripts: []
         };
+        // there is no db
         if (err && err.status === 404 && err.reason === 'no_db_file') return topbar_empty(results, callback);
+        // the design doc is not there...
+        if (err && err.status === 404 && err.reason === 'missing') return topbar_empty(results, callback);
         if (err) return callback(err);
         async.forEach(resp.rows, function(row, cb){
             if (row.key[0] === 0) results.settingsDoc = row.value;
@@ -11751,7 +11754,8 @@ return {
         show_gravatar : true,
         show_username : true,
         notification_theme: 'libnotify',
-        show_futon : true
+        show_futon : true,
+        dashboard_seed: 'http://garden20.iriscouch.com/dashboard_seed_dev'
     },
     sessions : {
         type : 'internal',
@@ -13558,7 +13562,11 @@ this["JST"]["templates/profile.underscore"] = function(obj){
 var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};
 with(obj||{}){
 __p+='';
- if (!is_user) { 
+ if (is_admin_party) { 
+;__p+='\n    <a class="login" href="'+
+(login_url)+
+'">Admin Party</a>\n';
+ } else if (!is_user) { 
 ;__p+='\n    <a class="login" href="'+
 (login_url)+
 '">Login</a>\n';
@@ -13617,13 +13625,15 @@ if (data.home_url) {
  } 
 ;__p+='\n\n            ';
  if (options.show_futon) {  
-;__p+='\n                <li><a class="fauxton_link" href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>\n            ';
+;__p+='\n                <li class="admin_only"><a class="fauxton_link" href="/fauxton/_design/fauxton/_rewrite/">Fauxton</a></li>\n            ';
  } 
 ;__p+='\n\n            ';
  if (data.no_db_file) {  
-;__p+='\n                <li><a class="apps_link" href="#" data-dropdown="initGarden-drop">Apps</a></li>\n            ';
+;__p+='\n                <li class="admin_only"><a class="apps_link" href="#" data-dropdown="initGarden-drop">Apps</a></li>\n            ';
+ } else { 
+;__p+='\n                <li class="admin_only"><a class="apps_link" href="/dashboard/_design/dashboard/_rewrite/settings">Apps</a></li>\n            ';
  } 
-;__p+='\n\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n<div id="profile-drop" class="f-dropdown content">\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <span>dsdasdasdas</span>\n</div>\n\n<div id="initGarden-drop" class="f-dropdown content">\n  Apps not enabled.\n  <button class="button" >Enable Apps</button>\n  <a href="http://apps.couchdb.apache.org">Learn More</a>\n</div>\n\n\n';
+;__p+='\n        </ul>\n\n        <!-- Right Nav Section -->\n        <ul class="right">\n          <li class="divider"></li>\n          <li><div id="dashboard-topbar-offline-icon"></div></li>\n          <li class="divider"></li>\n          <li id="dashboard-profile"></li>\n        </ul>\n      </section>\n</nav>\n\n<div id="profile-drop" class="f-dropdown content">\n    <img src="http://www.gravatar.com/avatar/21232f297a57a5a743894a0e4a801fc3?size=20&amp;default=mm" alt="admin">\n    <span>dsdasdasdas</span>\n</div>\n\n<div id="initGarden-drop" class="f-dropdown content">\n  Apps not enabled.\n  <button class="button" >Enable Apps</button>\n  <a href="http://apps.couchdb.apache.org">Learn More</a>\n</div>\n\n\n';
  if (options.sticky) { 
 ;__p+='\n</div>\n';
  } 
@@ -13681,7 +13691,8 @@ var css =  {
     'background-color': '#111111',
     'position': 'absolute',
     'top': '0px',
-    'right': '0px'
+    'right': '0px',
+    'max-height': '45px'
 },
 
 '#dashboard-topbar .top-bar.expanded .top-bar-section .right': {
@@ -13759,6 +13770,12 @@ var css =  {
     'margin-top': '5px',
     'margin-bottom': '15px',
     'font-size': '11px'
+},
+'#dashboard-topbar .top-bar-section ul li > a': {
+    'text-transform': 'capitalize'
+},
+'#dashboard-topbar .admin_only': {
+    display: 'none'
 }
 
 };  // end of css block
@@ -13816,6 +13833,8 @@ return function(options) {
 }(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
+var foundation = null;
+
 var app = function(dashboard_db_url, options) {
     if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
@@ -13860,6 +13879,7 @@ app.prototype.init = function(callback) {
 
             if (err) return callback(err);
 
+            widget.links = links;
             // the final merge. Priority ends up (from highest to lowest)
             //   1. The db settings doc
             //   2. Any options passed into the new garden-menu-widget(...,options)
@@ -13930,16 +13950,17 @@ app.prototype.loadTopbar = function(data, callback) {
             title: me.finalSettings.defaultAppName
         };
     }
-    console.log(me.finalSettings);
 
     $topbar.html(topbar_t({data: data, options: me.finalSettings } ));
 
     try {
         $(document).foundation();
+        foundation = $(document).foundation;
     } catch(e) {
         // so hacky. Depending how the user did the scripts, foundation might be
         // bound to jquery on the window scope
         window.$(document).foundation();
+        foundation = window.$(document).foundation;
     }
 
     var path = window.location.pathname;
@@ -14046,9 +14067,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar .logout').click(logout);
 
-    $('#initGarden-drop button').live('click', function(){
-
-    });
+    $('#initGarden-drop button').live('click', function(){ me.initGarden(); });
 
 
 
@@ -14058,14 +14077,17 @@ app.prototype.loadTopbar = function(data, callback) {
             size: 21,
             state: mapCoreStatesToDisplay(me.core.getState())
         });
+    } else {
+        $('#dashboard-topbar-offline-icon').hide();
+    }
+
+    // bind state changes.
+    me.core.bind(function(event, old_state, new_state) {
+        // filter some chaff
+        if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
 
 
-        // bind state changes.
-        me.core.bind(function(event, old_state, new_state) {
-            // filter some chaff
-            if ((old_state !== 'FIRST_VISIT' && new_state !=='FIRST_VISIT') && (me.last_state === new_state)) return;
-
-
+        if (me.sync_icon) {
             // show the sync state
             var display_state = mapCoreStatesToDisplay(new_state);
             if (new_state === 'FIRST_VISIT' && me.sync_icon.getState() === 'syncing') {
@@ -14073,26 +14095,25 @@ app.prototype.loadTopbar = function(data, callback) {
             } else {
                 me.sync_icon[display_state]();
             }
+        }
 
-            me.core.getCachedSession(function(err, session){
-                if (session.userCtx.name === me.last_user) return;
-                me.showSession(session);
-                me.last_user = session.userCtx.name;
-            });
-            me.last_state = new_state;
+        me.core.getCachedSession(function(err, session){
+            if (session.userCtx.name === me.last_user) return;
+            me.showSession(session);
+            me.last_user = session.userCtx.name;
         });
+        me.last_state = new_state;
+    });
 
-        // on click on sync icon
-        $('#dashboard-topbar-offline-icon').click(function(){
-            var state = me.core.getState();
-            if (state === 'FIRST_VISIT') {
-                me.sync_icon.syncing();
-                me.core.sync();
-            }
-        });
-    } else {
-        $('#dashboard-topbar-offline-icon').hide();
-    }
+    // on click on sync icon
+    $('#dashboard-topbar-offline-icon').click(function(){
+        var state = me.core.getState();
+        if (state === 'FIRST_VISIT') {
+            me.sync_icon.syncing();
+            me.core.sync();
+        }
+    });
+
 
     if (callback) callback(null);
     $topbar.data('ready', true);
@@ -14103,7 +14124,9 @@ app.prototype.loadTopbar = function(data, callback) {
 app.prototype.showSession = function(session) {
 
 
-    session.is_user = (session.userCtx.name || false);
+    session.is_user = isUser(session.userCtx);
+    session.is_admin = isAdmin(session.userCtx);
+    session.is_admin_party = isAdminParty(session.userCtx);
 
     session.displayName = session.userCtx.name;
     session.login_url = this.cachedLinks.login_url;
@@ -14111,6 +14134,12 @@ app.prototype.showSession = function(session) {
     session.login_url = session.login_url + "?redirect=" + encodeURIComponent(window.location);
 
     $('#dashboard-profile').html(profile_t(session));
+
+    var show_admin = session.is_admin || session.is_admin_party;
+
+
+    $('#dashboard-topbar .admin_only').toggle(show_admin);
+
 };
 
 
@@ -14150,6 +14179,50 @@ function logout() {
 }
 
 
+app.prototype.initGarden = function() {
+    var widget = this,
+        $btn = $('#initGarden-drop button');
+
+    if ($btn.data('available')) {
+        window.location = widget.links.settings_url;
+        return false;
+    }
+    $btn.attr('disabled', 'disabled').text('Please wait');
+
+    $.ajax({
+        url : '/_replicate',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            source: garden_settings.top_nav_bar.dashboard_seed,
+            target: 'dashboard',
+            create_target: true
+        }),
+        error    : function() {
+            app.log('Enabling Apps Failed', 'error');
+        },
+        success: function(){
+            widget.initGardenComplete();
+        }
+     });
+    return false;
+};
+
+app.prototype.initGardenComplete = function() {
+    var widget = this;
+    widget.garden_menu.getAppLinks(function(err, links){
+        if (err) return app.log('Enabling Apps Failed', 'error');
+        widget.links  = links;
+        app.log('Apps enabled');
+        $('#initGarden-drop button')
+            .removeAttr('disabled')
+            .data('available', true)
+            .text('See Apps');
+    });
+};
+
+
 function checkLogoutDestination() {
     var pass;
     $.ajax({
@@ -14168,7 +14241,31 @@ function checkLogoutDestination() {
 }
 
 
+function isAdmin(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.name) return false;
+    if (!userCtx.roles) return false;
+    if (userCtx.roles.indexOf('_admin') === -1) return false;
 
+    return true;
+}
+
+function isAdminParty(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.roles) return false;
+    if (userCtx.name) return false;
+
+    if (userCtx.roles.indexOf('_admin') === -1) return false;
+
+    return true;
+}
+
+
+function isUser(userCtx) {
+    if (!userCtx) return false;
+    if (!userCtx.name) return false;
+    return true;
+}
 
 
 // stuff for notifications

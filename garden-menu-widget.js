@@ -36,6 +36,8 @@
 }(this, function ($, _, events, url, GardenMenu, garden_settings, jscss, css, extra_css, Modernizr, bowser, svg, SyncIcon, topbar_t, profile_t) {
 
 
+var foundation = null;
+
 var app = function(dashboard_db_url, options) {
     if (!options) options = {};
     this.dashboard_db_url = dashboard_db_url;
@@ -80,6 +82,7 @@ app.prototype.init = function(callback) {
 
             if (err) return callback(err);
 
+            widget.links = links;
             // the final merge. Priority ends up (from highest to lowest)
             //   1. The db settings doc
             //   2. Any options passed into the new garden-menu-widget(...,options)
@@ -155,10 +158,12 @@ app.prototype.loadTopbar = function(data, callback) {
 
     try {
         $(document).foundation();
+        foundation = $(document).foundation;
     } catch(e) {
         // so hacky. Depending how the user did the scripts, foundation might be
         // bound to jquery on the window scope
         window.$(document).foundation();
+        foundation = window.$(document).foundation;
     }
 
     var path = window.location.pathname;
@@ -265,9 +270,7 @@ app.prototype.loadTopbar = function(data, callback) {
 
     $('#dashboard-topbar .logout').click(logout);
 
-    $('#initGarden-drop button').live('click', function(){
-
-    });
+    $('#initGarden-drop button').live('click', function(){ me.initGarden(); });
 
 
 
@@ -377,6 +380,50 @@ function logout() {
      });
     return false;
 }
+
+
+app.prototype.initGarden = function() {
+    var widget = this,
+        $btn = $('#initGarden-drop button');
+
+    if ($btn.data('available')) {
+        window.location = widget.links.settings_url;
+        return false;
+    }
+    $btn.attr('disabled', 'disabled').text('Please wait');
+
+    $.ajax({
+        url : '/_replicate',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            source: garden_settings.top_nav_bar.dashboard_seed,
+            target: 'dashboard',
+            create_target: true
+        }),
+        error    : function() {
+            app.log('Enabling Apps Failed', 'error');
+        },
+        success: function(){
+            widget.initGardenComplete();
+        }
+     });
+    return false;
+};
+
+app.prototype.initGardenComplete = function() {
+    var widget = this;
+    widget.garden_menu.getAppLinks(function(err, links){
+        if (err) return app.log('Enabling Apps Failed', 'error');
+        widget.links  = links;
+        app.log('Apps enabled');
+        $('#initGarden-drop button')
+            .removeAttr('disabled')
+            .data('available', true)
+            .text('See Apps');
+    });
+};
 
 
 function checkLogoutDestination() {

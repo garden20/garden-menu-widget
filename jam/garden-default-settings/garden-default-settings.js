@@ -45,7 +45,7 @@ return {
         show_username : true,
         notification_theme: 'libnotify',
         show_futon : true,
-        dashboard_seed: 'http://garden20.iriscouch.com/dashboard_seed'
+        dashboard_seed: 'http://garden20.iriscouch.com/dashboard_seed_dev'
     },
     sessions : {
         type : 'internal',

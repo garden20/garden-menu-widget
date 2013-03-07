@@ -45,8 +45,9 @@
 
             <% if (data.no_db_file) {  %>
                 <li class="admin_only"><a class="apps_link" href="#" data-dropdown="initGarden-drop">Apps</a></li>
+            <% } else { %>
+                <li class="admin_only"><a class="apps_link" href="/dashboard/_design/dashboard/_rewrite/settings">Apps</a></li>
             <% } %>
-
         </ul>
 
         <!-- Right Nav Section -->

@@ -48,7 +48,7 @@ var app = function(dashboard_db_url, options) {
 
     // adjust defaults for pouch based on env
     if (Modernizr.indexeddb || Modernizr.websqldatabase) {
-        defaults.disablePouch = false;
+        //defaults.disablePouch = false;
     }
     // also check version
     if (bowser.firefox && bowser.version < 12) {
@@ -69,7 +69,9 @@ var app = function(dashboard_db_url, options) {
 
     this.options = _.extend(defaults, options);
     this.emitter = new events.EventEmitter();
-    this.garden_menu = new GardenMenu(dashboard_db_url, this.options);
+    var init_menu_options = {};
+    _.extend(init_menu_options, garden_settings.top_nav_bar, this.options);
+    this.garden_menu = new GardenMenu(dashboard_db_url, init_menu_options);
 };
 
 

@@ -189,7 +189,7 @@ var app = function(dashboard_db_url, options) {
     };
 
     var get_stored_session = function(callback) {
-        core.extra_db.get('session', function(err, session){
+        core.extra_db.get('../_session', function(err, session){
             callback(err, session);
         });
     };

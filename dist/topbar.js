@@ -11964,7 +11964,6 @@ var app = function(dashboard_db_url, options) {
 
     var t_determine_state = function() {
         var self = this;
-
         async.parallel({
             remote_dashboard : remote_dashboard,
             pouched_dashboard : function(cb) {
@@ -12069,7 +12068,7 @@ var app = function(dashboard_db_url, options) {
     };
 
     var get_stored_session = function(callback) {
-        core.extra_db.get('session', function(err, session){
+        core.extra_db.get('../_session', function(err, session){
             callback(err, session);
         });
     };
@@ -12285,7 +12284,6 @@ var app = function(dashboard_db_url, options) {
 
 app.prototype.start = function(callback) {
     var self = this;
-
     var onState = function(event, oldState, newState) {
         if (newState === 'INIT') return;
         self.states.unbind(onState);
@@ -12468,7 +12466,6 @@ app.prototype.init = function(callback) {
         state: 'OFFLINE_NO_HOPE',
         settings: null
     };
-
     menu.dashboard_core.start(function(err, state) {
         if (state === 'OFFLINE_NO_HOPE') return callback('OFFLINE_NO_HOPE', results);
         results.state = state;
@@ -14535,7 +14532,7 @@ var app = function(dashboard_db_url, options) {
 
     // adjust defaults for pouch based on env
     if (Modernizr.indexeddb || Modernizr.websqldatabase) {
-        defaults.disablePouch = false;
+        //defaults.disablePouch = false;
     }
     // also check version
     if (bowser.firefox && bowser.version < 12) {
@@ -14556,7 +14553,9 @@ var app = function(dashboard_db_url, options) {
 
     this.options = _.extend(defaults, options);
     this.emitter = new events.EventEmitter();
-    this.garden_menu = new GardenMenu(dashboard_db_url, this.options);
+    var init_menu_options = {};
+    _.extend(init_menu_options, garden_settings.top_nav_bar, this.options);
+    this.garden_menu = new GardenMenu(dashboard_db_url, init_menu_options);
 };
 
 
@@ -14564,7 +14563,6 @@ app.prototype.init = function(callback) {
     var widget = this;
     widget.last_state = null;
     widget.garden_menu.init(function(err, results){
-
 
         widget.core = results.core;
         widget.garden_menu.getAppLinks(function(err, links){
